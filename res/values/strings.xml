@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Demos</string>
+    <string name="action_settings">设置</string>
+    
+    <string name="barcode">一维码、二维码</string>
+    
+    <string name="barcode_info">条码信息区</string>
+    <string name="barcode_attr">扫描枪信息</string>
+    <string name="barcode_sn">出厂序列号：</string>
+    <string name="barcode_date">出厂日期：</string>
+    <string name="barcode_ver">固件版本：</string>
+    <string name="barcode_esn">电子序列号：</string>
+    <string name="barcode_set_esn">输入新电子序列号</string>
+    <string name="barcode_reset_factory">恢复出厂设置</string>
+    <string name="barcode_scanner">扫描模式</string>
+    <string name="barcode_trigger">触发模式</string>
+    <string name="barcode_sensor">感应模式</string>
+    <string name="barcode_continue">连续模式</string>
+    <string name="barcode_esn_digits">0123456789-\n
+        abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ</string>
+    
+    <string name="unknown_dev">设备未连接</string>
+    <string name="unknown">未知的</string>
+    <string name="setting_next">确认</string>
+    <string name="setting_cancel">取消</string>
+    <string name="setting_success">设置成功！</string>
+    <string name="setting_failture">设置失败！</string>
+
+</resources>
