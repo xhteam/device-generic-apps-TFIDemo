@@ -1,20 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    style="@style/layoutStyle"
     android:background="#000000"
-    android:orientation="vertical"
-    tools:context=".MainActivity" >
+    android:orientation="vertical" >
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="1dip"
-        android:layout_marginBottom="5dip"
-        android:background="#ffffff" />
+        style="@style/WhiteSeparator" />
     
     <TextView android:id="@+id/barcode_info"
         android:layout_width="match_parent"
@@ -22,7 +13,7 @@
         android:layout_marginBottom="5dip"
         android:layout_weight="1"
         android:gravity="center"
-        android:background="#f0f0f0"
+        android:background="#F0F0F0"
         android:textColor="#000000"
         android:textSize="23sp"
         android:textStyle="bold"
@@ -31,10 +22,7 @@
         android:hint="@string/barcode_info" />
     
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="1dip"
-        android:layout_marginBottom="5dip"
-        android:background="#ffffff" />
+        style="@style/WhiteSeparator" />
     
     <LinearLayout
         android:layout_width="match_parent"
@@ -47,31 +35,21 @@
             android:layout_weight="1"
             android:orientation="vertical" >
             <TextView
-	            android:layout_width="match_parent"
-	            android:layout_height="wrap_content"
+	            style="@style/TextViewStyle"
 	            android:layout_marginBottom="5dip"
-	            android:textColor="#ffffff"
 	            android:textSize="17sp"
 	            android:text="@string/barcode_attr" />
             <TextView android:id="@+id/barcode_ver"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#ffffff"
+                style="@style/TextViewStyle"
                 android:text="@string/barcode_ver" />
             <TextView android:id="@+id/barcode_date"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#ffffff"
+                style="@style/TextViewStyle"
                 android:text="@string/barcode_date" />
             <TextView android:id="@+id/barcode_sn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#ffffff"
+                style="@style/TextViewStyle"
                 android:text="@string/barcode_sn" />
             <TextView android:id="@+id/barcode_esn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#ffffff"
+                style="@style/TextViewStyle"
                 android:text="@string/barcode_esn" />
         </LinearLayout>
         <LinearLayout
@@ -89,7 +67,7 @@
 	                android:layout_width="0dip"
 	                android:layout_height="wrap_content"
 	                android:layout_weight="4"
-	                android:background="#f0f0f0"
+	                android:background="#F0F0F0"
 	                android:textColor="#000000"
 	                android:singleLine="true"
 	                android:digits="@string/barcode_esn_digits"
@@ -104,14 +82,12 @@
 	                android:layout_height="wrap_content"
 	                android:layout_weight="1"
 	                android:clickable="true"
-	                android:textColor="#ffffff"
-	                android:text="@string/setting_next" />
+	                android:textColor="#FFFFFF"
+	                android:text="@string/next" />
             </LinearLayout>
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                style="@style/TextViewStyle"
                 android:layout_marginTop="5dip"
-                android:textColor="#ffffff"
                 android:textSize="17sp"
                 android:text="@string/barcode_scanner" />
             <RadioGroup android:id="@+id/barcode_scanner"
@@ -123,20 +99,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
-                    android:textColor="#ffffff"
+                    android:textColor="#FFFFFF"
                     android:text="@string/barcode_trigger"
                     android:checked="true" />
                 <RadioButton android:id="@+id/barcode_sensor"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:textColor="#ffffff"
+                    android:textColor="#FFFFFF"
                     android:text="@string/barcode_sensor" />
                 <RadioButton android:id="@+id/barcode_continue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="right"
-                    android:textColor="#ffffff"
+                    android:textColor="#FFFFFF"
                     android:text="@string/barcode_continue" />
             </RadioGroup>
             <Button android:id="@+id/barcode_reset"
@@ -146,7 +122,7 @@
                 android:layout_marginTop="5dip"
                 android:layout_marginBottom="5dip"
                 android:clickable="true"
-                android:textColor="#ffffff"
+                android:textColor="#FFFFFF"
                 android:text="@string/barcode_reset_factory"/>
         </LinearLayout>
 	</LinearLayout>
