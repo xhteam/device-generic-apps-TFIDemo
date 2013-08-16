@@ -1,16 +1,44 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".MainActivity" >
-
-    <Button android:id="@+id/barcode"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/barcode"/>
-
-</LinearLayout>
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/layoutStyle"
+    android:background="#000000" >
+    
+    <TableRow>
+        <LinearLayout style="@style/RowStyle">
+            <ImageButton android:id="@+id/goto_barcode"
+                style="@style/ImageButtonStyle"
+                android:contentDescription="@string/title_barcode"
+                android:background="@drawable/ic_barcode" />
+            <TextView android:id="@+id/goto_barcode_either"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dip"
+                android:textColor="#FFFFFF"
+                android:text="@string/title_barcode"
+                android:clickable="true" />
+        </LinearLayout>
+        <LinearLayout style="@style/RowStyle">
+            <ImageButton android:id="@+id/goto_scard"
+                style="@style/ImageButtonStyle"
+                android:contentDescription="@string/title_scard"
+                android:background="@drawable/ic_scard" />
+            <TextView android:id="@+id/goto_scard_either"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dip"
+                android:textColor="#FFFFFF"
+                android:text="@string/title_scard"
+                android:clickable="true" />
+        </LinearLayout>
+        <LinearLayout style="@style/RowStyle"/>
+        <LinearLayout style="@style/RowStyle"/>
+    </TableRow>
+    <TableRow>
+        <LinearLayout style="@style/RowStyle"/>
+        <LinearLayout style="@style/RowStyle"/>
+        <LinearLayout style="@style/RowStyle"/>
+        <LinearLayout style="@style/RowStyle"/>
+    </TableRow>
+    
+    
+</TableLayout>

@@ -7,7 +7,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.preference.PreferenceFrameLayout.LayoutParams;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -90,7 +89,7 @@ public class BarcodeActivity extends Activity implements OnClickListener {
 				startCaptureListener();
 			} else if (msg.what == UNCOMPLETE) {
 				initLayout();
-				setBarcodeInfo(getString(R.string.unknown_dev));
+				setBarcodeInfo(getString(R.string.disconnect));
 			} else if (msg.what == SUCCESS) {
 				showToast(true);
 				startCaptureListener();
@@ -131,12 +130,14 @@ public class BarcodeActivity extends Activity implements OnClickListener {
 		LinearLayout mLayout = new LinearLayout(this);
 		mLayout.setOrientation(LinearLayout.VERTICAL);
 		mLayout.setGravity(Gravity.CENTER);
-		LayoutParams mLayoutParam = new LayoutParams(LayoutParams.MATCH_PARENT, 
-				LayoutParams.MATCH_PARENT);
+		LinearLayout.LayoutParams mLayoutParam = new LinearLayout.LayoutParams(
+				LinearLayout.LayoutParams.MATCH_PARENT, 
+				LinearLayout.LayoutParams.MATCH_PARENT);
 		
 		ProgressBar mBar = new ProgressBar(this, null, android.R.attr.progressBarStyleLarge);
-		LayoutParams mBarParam = new LayoutParams(LayoutParams.WRAP_CONTENT, 
-				LayoutParams.WRAP_CONTENT);
+		LinearLayout.LayoutParams mBarParam = new LinearLayout.LayoutParams(
+				LinearLayout.LayoutParams.WRAP_CONTENT, 
+				LinearLayout.LayoutParams.WRAP_CONTENT);
 		
 		mLayout.addView(mBar, mBarParam);
 		setContentView(mLayout, mLayoutParam);
@@ -165,20 +166,20 @@ public class BarcodeActivity extends Activity implements OnClickListener {
 					watchThread(getDevInfoThread(), 5000);
 				} else {
 					initLayout();
-					setBarcodeInfo(getString(R.string.unknown_dev));
+					setBarcodeInfo(getString(R.string.disconnect));
 				}
 			} else {
 				if (mConnected) {
 					startCaptureListener();
 				} else {
-					setBarcodeInfo(getString(R.string.unknown_dev));
+					setBarcodeInfo(getString(R.string.disconnect));
 				}
 			}
 		} else {
 			if (!isInitCompleted) {
 				initLayout();
 			}
-			setBarcodeInfo(getString(R.string.unknown_dev));
+			setBarcodeInfo(getString(R.string.disconnect));
 		}
 	}
 	
