@@ -1,8 +1,6 @@
 package com.quester.demo.scard;
 
 import com.quester.demo.R;
-import com.quester.demo.SCardManager;
-import com.quester.demo.SCardPcscLite;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -13,10 +11,11 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+/**
+ * Foreground activity that shows information about the specified smart card
+ * @author John.Jian
+ */
 public class SCardActivity extends Activity implements SCardPcscLite {
-	
-	@SuppressWarnings("unused")
-	private static final String TAG = "scard";
 	
 	private static final int ESTABLISH = 0x1;
 	private static final int RELEASE = 0x2;
@@ -133,9 +132,9 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 			case TRANSMIT:
 				if (responsed(ret)) {
 					mTextView.append(getDetails(R.string.scard_transmit, R.string.scard_complete));
-					mTextView.append("-> " + getString(R.string.scard_sending) + 
+					mTextView.append("-> " + getString(R.string.sending) + 
 							byteArrayToString(sendBuf, sendBuf.length) + "\n");
-					mTextView.append("-> " + getString(R.string.scard_received) + 
+					mTextView.append("-> " + getString(R.string.received) + 
 							byteArrayToString(recvBuf, recvLen.intValue()) + "\n");
 				} else {
 					mTextView.append(getDetails(R.string.scard_transmit, R.string.scard_error));

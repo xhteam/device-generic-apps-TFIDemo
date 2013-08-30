@@ -1,5 +1,9 @@
-package com.quester.demo;
+package com.quester.demo.scard;
 
+/**
+ * Mapping pcsclite.h
+ * @author John.Jian
+ */
 public interface SCardPcscLite {
 	
 	/** No error was encountered */

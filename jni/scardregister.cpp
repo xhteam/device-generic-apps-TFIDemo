@@ -16,7 +16,7 @@ extern "C" {
 }
 #endif
 
-static char className[] = "com/quester/demo/SCardManager";
+static char className[] = "com/quester/demo/scard/SCardManager";
 
 static SCARDCONTEXT hContext;
 static SCARDHANDLE hCard;

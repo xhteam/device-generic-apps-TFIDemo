@@ -2,15 +2,20 @@ package com.quester.demo.barcode;
 
 import com.quester.demo.R;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -21,112 +26,178 @@ import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class BarcodeActivity extends Activity implements OnClickListener {
+/**
+ * Foreground activity that shows information about QR engine
+ * @author John.Jian
+ */
+public class BarcodeActivity extends Activity {
 	
-	private static final int RECEIVE = 0x1;
-	private static final int COMPLETE = 0x2;
-	private static final int UNCOMPLETE = 0x3;
-	private static final int SUCCESS = 0x4;
-	private static final int FAILTURE = 0x5;
-	private static final int REOPEN = 0x6;
+	private final int RECEIVE = 0x1;
+	private final int COMPLETE = 0x2;
+	private final int UNCOMPLETE = 0x3;
+	private final String UNKNOWN = "unknown";
 	
-	private TextView mInfo;
-	private TextView mVer;
-	private TextView mDate;
-	private TextView mSn;
-	private TextView mEsn;
-	private EditText mEdit;
-	private Button mConfire;
-	private Button mReset;
+	private TextView mInfoField;
+	private TextView mVerField;
+	private TextView mDateField;
+	private TextView mSnField;
+	private TextView mEsnField;
+	private EditText mEsnEdit;
+	private Button mEsnConfire;
 	private RadioGroup mGroup;
 	private RadioButton mTriggerRb;
 	private RadioButton mSensorRb;
 	private RadioButton mContinueRb;
 	
-	private SerialComm mComm;
-	private CaptureRunnable mRunnable;
-	
-	private static boolean isInitCompleted;
-	private static boolean mConnected;
-	private static boolean isDone;
+	private boolean mConnected = false;
+	private boolean mInitializing = false;
+	private boolean mInitCompleted = false;
+	private boolean mPausing = false;
+	private boolean mEsnSetting = false;
+	private boolean mModeSetting = false;
+	private boolean mTrigging = false;
+	private boolean mScreenOn = false;
+	private int mReadMode = 0;
 	
 	private String mDevVer;
 	private String mDevDate;
 	private String mDevSn;
 	private String mDevEsn;
 	
-	/* Listen serial port */
-	@SuppressLint("HandlerLeak")
+	private SerialComm mComm;
+	private CaptureRunnable mRunnable;
+	private BarcodeService mBarcodeService;
+	private SharedPreferences mPreferences;
+	private SharedPreferences.Editor mEditor;
+	
+	private ServiceConnection mConnection = new ServiceConnection() {
+		public void onServiceDisconnected(ComponentName className) {
+			mBarcodeService = null;
+		}
+		
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			mBarcodeService = ((BarcodeService.BarcodeBinder)service).getService();
+		}
+	};
+	
+	private void doBindService() {
+		Intent intent = new Intent(BarcodeActivity.this, BarcodeService.class);
+		startService(intent);
+		bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+	}
+	
+	private void doUnbindService() {
+		unbindService(mConnection);
+	}
+	
+	/* Handler for ui */
 	private Handler mHandler = new Handler() {
 		public void handleMessage(Message msg) {
 			if (msg.what == RECEIVE) {
 				byte[] data = (byte[])msg.obj;
 				if (data.length == 1) {
-					if (data[0] == Command.SUCCESS) {
-						showToast(true);
-					} else if (data[0] == Command.FAILTURE) {
-						showToast(false);
-					} else {
+					switch (data[0]) {
+					case Command.SUCCESS:
+						if (mTrigging) {
+							mBarcodeService.mResponse = true;
+						} else if (mEsnSetting) {
+							setClickable(true);
+							mEsnSetting = false;
+							mEditor.putString("esn", mDevEsn);
+							mEditor.commit();
+							setScannerStatus();
+						} else if (mModeSetting) {
+							setClickable(true);
+							mModeSetting = false;
+							mEditor.putInt("mode", mReadMode);
+							mEditor.commit();
+						}
+						break;
+					case Command.FAILTURE:
+						if (mEsnSetting) {
+							setClickable(true);
+							mEsnSetting = false;
+							showToast(getString(R.string.barcode_esn)
+									+ getString(R.string.barcode_setting_failed));
+						} else if (mModeSetting) {
+							setClickable(true);
+							mModeSetting = false;
+							showToast(getString(R.string.barcode_scanner)
+									+ getString(R.string.barcode_setting_failed));
+						}
+						break;
+					case Command.DEV_REPLY:
+						isTriggerEvent();
+						break;
+					default:
+						isTriggerEvent();
 						setBarcodeInfo(byteArrayToString(data));
+						break;
 					}
 				} else {
 					if (data[0] == Command.PREFIX_RECV[0] 
 							&& data[1] == Command.PREFIX_RECV[1]) {
-						// query result, unrealized, reference class Parser
+						//query result, unrealized, refer Parser
+						isTriggerEvent();
 					} else {
-						// display barcode info
+						isTriggerEvent();
 						setBarcodeInfo(byteArrayToString(data));
 					}
 				}
 				data = null;
 			} else if (msg.what == COMPLETE) {
-				isInitCompleted = true;
 				initLayout();
-				setDevVer();
-				setDevDate();
-				setDevSn();
-				setDevEsn();
-				startCaptureListener();
+				setScannerStatus();
+				if (mInitializing) {
+					mInitializing = false;
+				}
+				mBarcodeService.mUiReady = true;
+				startCapture();
+				if (mTrigging) {
+					mComm.triggerDown();
+				}
 			} else if (msg.what == UNCOMPLETE) {
-				initLayout();
-				setBarcodeInfo(getString(R.string.disconnect));
-			} else if (msg.what == SUCCESS) {
-				showToast(true);
-				startCaptureListener();
-			} else if (msg.what == FAILTURE) {
-				showToast(false);
-				startCaptureListener();
-			} else if (msg.what == REOPEN) {
-				showToast(false);
-				mComm.openSerial();
-				startCaptureListener();
+				if (!mInitCompleted) {
+					initLayout();
+				}
+				if (mInitializing) {
+					mInitializing = false;
+				}
+				setBarcodeInfo(getString(R.string.barcode_disconnect));
 			}
 		}
 		
 	};
 	
-	/* Show setting result */
-	private void showToast(boolean bool) {
-		if (bool) {
-			Toast.makeText(this, Utils.success, Toast.LENGTH_SHORT).show();
-		} else {
-			Toast.makeText(this, Utils.failture, Toast.LENGTH_SHORT).show();
+	private void isTriggerEvent() {
+		if (mTrigging) {
+			mTrigging = false;
+			mBarcodeService.mTrigging = false;
+			mComm.triggerUp();
 		}
 	}
 	
-	/* Default charset utf-8 */
 	private String byteArrayToString(byte[] data) {
 		return new String(data);
+	}
+	
+	private void showToast(String msg) {
+		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setProgressUi();
-		firstInitialize();
+		setProgressBar();
+		doBindService();
+		mComm = new SerialComm(this);
+		mRunnable = new CaptureRunnable();
+		mPreferences = getSharedPreferences("scanner_status", Context.MODE_PRIVATE);
+		mEditor = mPreferences.edit();
 	}
 	
-	private void setProgressUi() {
+	/* Show a progress bar until finish initialization */
+	private void setProgressBar() {
 		LinearLayout mLayout = new LinearLayout(this);
 		mLayout.setOrientation(LinearLayout.VERTICAL);
 		mLayout.setGravity(Gravity.CENTER);
@@ -143,306 +214,301 @@ public class BarcodeActivity extends Activity implements OnClickListener {
 		setContentView(mLayout, mLayoutParam);
 	}
 	
-	private void firstInitialize() {
-		Utils.success = getString(R.string.setting_success);
-		Utils.failture = getString(R.string.setting_failture);
-		Utils.unknown = getString(R.string.unknown);
-		
-		isInitCompleted = false;
-		mConnected = false;
-		mDevVer = mDevDate = mDevSn = mDevEsn = null;
+	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+		setIntent(intent);
 	}
 	
 	@Override
 	protected void onResume() {
 		super.onResume();
-		mComm = new SerialComm(this);
-		mRunnable = new CaptureRunnable();
+		if (mInitializing) return;
+		if (!mScreenOn) {
+			getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+			mScreenOn = true;
+		}
 		
-		if (mComm.openSerial()) {
-			mConnected = mComm.isConnected();
-			if (!isInitCompleted) {
-				if (mConnected) {
-					watchThread(getDevInfoThread(), 5000);
-				} else {
-					initLayout();
-					setBarcodeInfo(getString(R.string.disconnect));
-				}
+		mTrigging = getIntent().getAction().equals(mBarcodeService.ACTION_TRIGGER);
+		if (!mInitCompleted) {
+			mInitializing = true;
+			if (mComm.openSerial()) {
+				mPausing = false;
+				getSannerStatues();
+				//observing initialization state
+				new Thread(new Runnable() {
+					public void run() {
+						int counter = 10;
+						while (!isFinishing() && !mPausing && !mInitCompleted && counter > 0) {
+							try {
+								if ((--counter) == 0) {
+									mHandler.sendEmptyMessage(UNCOMPLETE);
+									continue;
+								}
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}).start();
 			} else {
-				if (mConnected) {
-					startCaptureListener();
-				} else {
-					setBarcodeInfo(getString(R.string.disconnect));
-				}
+				initLayout();
+				setBarcodeInfo(getString(R.string.disconnect));
+				mInitializing = false;
 			}
 		} else {
-			if (!isInitCompleted) {
-				initLayout();
+			if (mTrigging) {
+				mComm.triggerDown();
+			} else {
+				if (mComm.openSerial()) {
+					mConnected = mComm.isConnected();
+					if (mConnected) {
+						startCapture();
+					} else {
+						mHandler.sendEmptyMessage(UNCOMPLETE);
+					}
+				} else {
+					setBarcodeInfo(getString(R.string.disconnect));
+				}
 			}
-			setBarcodeInfo(getString(R.string.disconnect));
 		}
 	}
 	
-	private Thread getDevInfoThread() {
-		Thread thread = new Thread(new Runnable() {
-			public void run() {
-				mComm.writeSerial(Command.getQueryCommand(Command.QUERY_DEV_VER));
-				byte[] reply = mComm.readSerial();
-				if (reply != null) {
-					mDevVer = Parser.getDevVersion(reply);
-				}
-				mComm.writeSerial(Command.getQueryCommand(Command.QUERY_DEV_DATE));
-				reply = mComm.readSerial();
-				if (reply != null) {
-					mDevDate = Parser.getDevDate(reply);
-				}
-				mComm.writeSerial(Command.getQueryCommand(Command.QUERY_DEV_SN));
-				reply = mComm.readSerial();
-				if (reply != null) {
-					mDevSn = Parser.getDevSn(reply);
-				}
-				mComm.writeSerial(Command.getQueryCommand(Command.QUERY_DEV_ESN));
-				reply = mComm.readSerial();
-				if (reply != null) {
-					mDevEsn = Parser.getDevEsn(reply);
-				}
-				getEndSuffix();
-				mHandler.sendEmptyMessage(COMPLETE);
-			}
-		});
-		thread.start();
-		return thread;
-	}
-	
-	private void watchThread(final Thread thread, final long maxDelay) {
+	private void getSannerStatues() {
 		new Thread(new Runnable() {
 			public void run() {
-				long curTime = System.currentTimeMillis();
-				while ((System.currentTimeMillis() - curTime) <= maxDelay) {
-					Utils.delay(1000);
-					if (isInitCompleted) return;
+				mConnected = mComm.isConnected();
+				if (mConnected) {
+					if (mPreferences.getBoolean("scanner", false)) {
+						mDevVer = mPreferences.getString("ver", UNKNOWN);
+						mDevDate = mPreferences.getString("date", UNKNOWN);
+						mDevSn = mPreferences.getString("sn", UNKNOWN);
+						mDevEsn = mPreferences.getString("esn", UNKNOWN);
+						mReadMode = mPreferences.getInt("mode", 0);
+						mHandler.sendEmptyMessage(COMPLETE);
+					} else {
+						mComm.writeSerial(Parser.getQueryCommand(Command.QUERY_DEV_VER));
+						byte[] reply = mComm.readSerial();
+						if (mPausing) return;
+						if (reply != null) {
+							mDevVer = Parser.getDevVersion(reply);
+						}
+						mComm.writeSerial(Parser.getQueryCommand(Command.QUERY_DEV_DATE));
+						reply = mComm.readSerial();
+						if (mPausing) return;
+						if (reply != null) {
+							mDevDate = Parser.getDevDate(reply);
+						}
+						mComm.writeSerial(Parser.getQueryCommand(Command.QUERY_DEV_SN));
+						reply = mComm.readSerial();
+						if (mPausing) return;
+						if (reply != null) {
+							mDevSn = Parser.getDevSn(reply);
+						}
+						mComm.writeSerial(Parser.getQueryCommand(Command.QUERY_DEV_ESN));
+						reply = mComm.readSerial();
+						if (mPausing) return;
+						if (reply != null) {
+							mDevEsn = Parser.getDevEsn(reply);
+						}
+						mComm.writeSerial(Parser.getQueryCommand(Command.QUERY_READ_MODE));
+						reply = mComm.readSerial();
+						if (mPausing) return;
+						if (reply != null) {
+							mReadMode = Parser.getReadMode(reply);
+						}
+						
+						mEditor.putString("ver", (mDevVer != null) ? mDevVer : UNKNOWN);
+						mEditor.putString("date", (mDevDate != null) ? mDevDate : UNKNOWN);
+						mEditor.putString("sn", (mDevSn != null) ? mDevSn : UNKNOWN);
+						mEditor.putString("esn", (mDevEsn != null) ? mDevEsn : UNKNOWN);
+						mEditor.putInt("mode", mReadMode);
+						mEditor.putBoolean("scanner", true);
+						mEditor.commit();
+						
+						mHandler.sendEmptyMessage(COMPLETE);
+					}
+				} else {
+					mHandler.sendEmptyMessage(UNCOMPLETE);
 				}
-				mComm.closeSerial();
-				mConnected = false;
-				mHandler.sendEmptyMessage(UNCOMPLETE);
-				Log.i(Utils.TAG, "error operation");
 			}
 		}).start();
+	}
+	
+	/* Master ui */
+	private void initLayout() {
+		setContentView(R.layout.activity_barcode);
+		mInfoField = (TextView)findViewById(R.id.barcode_info);
+		mVerField = (TextView)findViewById(R.id.barcode_ver);
+		mDateField = (TextView)findViewById(R.id.barcode_date);
+		mSnField = (TextView)findViewById(R.id.barcode_sn);
+		mEsnField = (TextView)findViewById(R.id.barcode_esn);
+		mEsnEdit = (EditText)findViewById(R.id.barcode_set_esn);
+		mEsnConfire = (Button)findViewById(R.id.barcode_modify_esn);
+		mGroup = (RadioGroup)findViewById(R.id.barcode_scanner);
+		mTriggerRb = (RadioButton)findViewById(R.id.barcode_trigger);
+		mSensorRb = (RadioButton)findViewById(R.id.barcode_sensor);
+		mContinueRb = (RadioButton)findViewById(R.id.barcode_continue);
+		
+		if (mReadMode == 0x30) {
+			mTriggerRb.setChecked(true);
+		} else if (mReadMode == 0x31) {
+			mSensorRb.setChecked(true);
+		} else if (mReadMode == 0x32) {
+			mContinueRb.setChecked(true);
+		}
+		
+		mEsnConfire.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if (!mConnected) return;
+				isTriggerEvent();
+				setClickable(false);
+				mDevEsn = mEsnEdit.getText().toString();
+				mEsnSetting = true;
+				mComm.setEsn(mDevEsn);
+				mEsnEdit.setText("");
+			}
+		});
+		mGroup.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			public void onCheckedChanged(RadioGroup group, int checkedId) {
+				if (!mConnected) return;
+				isTriggerEvent();
+				setClickable(false);
+				mModeSetting = true;
+				if (checkedId == mTriggerRb.getId()) {
+					mComm.writeSerial(Parser.getSettingCommand(Command.MODE_TRIGGER));
+					mReadMode = 0x30;
+				} else if (checkedId == mSensorRb.getId()) {
+					mComm.writeSerial(Parser.getSettingCommand(Command.MODE_SENSER));
+					mReadMode = 0x31;
+				} else if (checkedId == mContinueRb.getId()) {
+					mComm.writeSerial(Parser.getSettingCommand(Command.MODE_CONTINUE));
+					mReadMode = 0x32;
+				}
+			}
+		});
+		
+		mInitCompleted = true;
+	}
+	
+	private void setClickable(boolean clickable) {
+		mEsnConfire.setClickable(clickable);
+		mTriggerRb.setClickable(clickable);
+		mSensorRb.setClickable(clickable);
+		mContinueRb.setClickable(clickable);
 	}
 	
 	@Override
 	protected void onPause() {
 		super.onPause();
-		if (mConnected) {
-			stopCaptureListener();
+		if (mScreenOn) {
+			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+			mScreenOn = false;
 		}
+		if (mInitializing) {
+			mInitializing = false;
+		}
+		if (!mInitCompleted) {
+			mPausing = true;
+		}
+		if (mConnected) {
+			stopCapture();
+		}
+		mComm.closeSerial();
 	}
 	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		mBarcodeService.mUiReady = false;
+		doUnbindService();
+		mComm = null;
+		mRunnable = null;
 	}
 	
-	private void initLayout() {
-		setContentView(R.layout.activity_barcode);
-		mInfo = (TextView)findViewById(R.id.barcode_info);
-		mVer = (TextView)findViewById(R.id.barcode_ver);
-		mDate = (TextView)findViewById(R.id.barcode_date);
-		mSn = (TextView)findViewById(R.id.barcode_sn);
-		mEsn = (TextView)findViewById(R.id.barcode_esn);
-		mEdit = (EditText)findViewById(R.id.barcode_set_esn);
-		mConfire = (Button)findViewById(R.id.barcode_modify_esn);
-		mGroup = (RadioGroup)findViewById(R.id.barcode_scanner);
-		mTriggerRb = (RadioButton)findViewById(R.id.barcode_trigger);
-		mSensorRb = (RadioButton)findViewById(R.id.barcode_sensor);
-		mContinueRb = (RadioButton)findViewById(R.id.barcode_continue);
-		mReset = (Button)findViewById(R.id.barcode_reset);
-		
-		if (isInitCompleted) {
-			mConfire.setOnClickListener(this);
-			mReset.setOnClickListener(this);
-			
-			mGroup.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-				public void onCheckedChanged(RadioGroup group, int checkedId) {
-					if (!mConnected) return;
-					stopCaptureListener();
-					mComm.openSerial();
-					if (checkedId == mTriggerRb.getId()) {
-						setReadMode(Utils.MODE_TRIGGER, 1800);
-					} else if (checkedId == mSensorRb.getId()) {
-						setReadMode(Utils.MODE_SENSOR, 1800);
-					} else if (checkedId == mContinueRb.getId()) {
-						setReadMode(Utils.MODE_CONTINUE, 1800);
-					}
-				}
-			});
-		}
+	private void setBarcodeInfo(String str) {
+		mInfoField.setText(str);
 	}
 	
-	private void setReadMode(final int mode, final int maxDelay) {
-		isDone = false;
-		final Thread thread = new Thread(new Runnable() {
-			public void run() {
-				if (mComm.setReadMode(mode)) {
-					mHandler.sendEmptyMessage(SUCCESS);
-				} else {
-					mHandler.sendEmptyMessage(FAILTURE);
-				}
-				isDone = true;
-			}
-		});
-		thread.start();
+	private void setScannerStatus() {
+		mVerField.setText(getString(R.string.barcode_ver) + 
+				(mDevVer != null ? mDevVer : UNKNOWN));
+		mDateField.setText(getString(R.string.barcode_date) + 
+				(mDevDate != null ? mDevDate : UNKNOWN));
+		mSnField.setText(getString(R.string.barcode_sn) + 
+				(mDevSn != null ? mDevSn : UNKNOWN));
+		mEsnField.setText(getString(R.string.barcode_esn) + 
+				(mDevEsn != null ? mDevEsn : UNKNOWN));
+	}
+	
+	@SuppressWarnings("unused")
+	private void resetFactory() {
+		if (!mConnected) return;
+		isTriggerEvent();
+		stopCapture();
+		mComm.resetFactory();
+		mEditor.putBoolean("scanner", false);
+		mEditor.commit();
+		mInitCompleted = false;
+		mBarcodeService.mUiReady = false;
+		setProgressBar();
 		
+		mInitializing = true;
+		mPausing = false;
+		getSannerStatues();
+		//observing initialization state
 		new Thread(new Runnable() {
 			public void run() {
-				long curTime = System.currentTimeMillis();
-				while ((System.currentTimeMillis() - curTime) <= maxDelay) {
-					Utils.delay(Command.MAX_DELAY);
-					if (isDone) return;
+				int counter = 10;
+				while (!isFinishing() && !mPausing && !mInitCompleted && counter > 0) {
+					try {
+						if ((--counter) == 0) {
+							mHandler.sendEmptyMessage(UNCOMPLETE);
+							continue;
+						}
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
-				mComm.closeSerial();
-				mHandler.sendEmptyMessage(REOPEN);
 			}
 		}).start();
 	}
 	
-	@Override
-	public void onClick(View v) {
-		if (!mConnected) return;
-		switch (v.getId()) {
-		case R.id.barcode_modify_esn:
-			String newEsn = mEdit.getText().toString();
-			if (newEsn != null) {
-				stopCaptureListener();
-				mComm.openSerial();
-				if (mComm.setEsn(newEsn)) {
-					mDevEsn = newEsn;
-					setDevEsn();
-				}
-				mEdit.setText("");
-				startCaptureListener();
-			}
-			break;
-		case R.id.barcode_reset:
-			stopCaptureListener();
-			mComm.openSerial();
-			if (mComm.resetFactoryData()) {
-				mComm.closeSerial();
-				setProgressUi();
-				isInitCompleted = false;
-				onResume();
-			} else {
-				startCaptureListener();
-			}
-			break;
-		default:
-			break;
-		}
-	}
-	
-	private void getEndSuffix() {
-		mComm.writeSerial(Command.getQueryCommand(Command.QUERY_END_CHAR));
-		byte[] reply = mComm.readSerial();
-		if (reply != null) {
-			Parser.getEndChars(reply);
-		} else {
-			Parser.endChars = false;
-			Parser.endCharsBuf = null;
-		}
-	}
-	
-	/* Barcode information */
-	private void setBarcodeInfo(String str) {
-		mInfo.setText(str);
-	}
-	
-	/* Firmware version */
-	private void setDevVer() {
-		mVer.setText(getString(R.string.barcode_ver) + 
-				(mDevVer != null ? mDevVer : Utils.unknown));
-	}
-	
-	/* Manufacture date */
-	private void setDevDate() {
-		mDate.setText(getString(R.string.barcode_date) + 
-				(mDevDate != null ? mDevDate : Utils.unknown));
-	}
-	
-	/* Device serial number */
-	private void setDevSn() {
-		mSn.setText(getString(R.string.barcode_sn) + 
-				(mDevSn != null ? mDevSn : Utils.unknown));
-	}
-	
-	/* Device electronic serial number */
-	private void setDevEsn() {
-		mEsn.setText(getString(R.string.barcode_esn) + 
-				(mDevEsn != null ? mDevEsn : Utils.unknown));
-	}
-	
-	private void startCaptureListener() {
+	private void startCapture() {
 		mRunnable.setConnectState(true);
+		mComm.enableSetupCode();
 		new Thread(mRunnable).start();
 	}
 	
-	private void stopCaptureListener() {
+	private void stopCapture() {
 		mRunnable.setConnectState(false);
-		mComm.closeSerial();
+		mComm.disableSetupCode();
 	}
 	
 	/** Monitoring thread */
 	private class CaptureRunnable implements Runnable {
 		
-		private byte[] captureBuf;
 		private boolean isConnected;
-		
-		public CaptureRunnable() {
-			captureBuf = new byte[Utils.BUF_LENGTH];
-		}
 		
 		public void setConnectState(boolean connect) {
 			isConnected = connect;
 		}
 		
-		private void getDataStream() {
-			byte[] tmpBuf = null;
-			int tmpLens;
+		private void readSerialPort() {
+			byte[] recvBuf = null;
 			while (isConnected) {
-				tmpBuf = mComm.readSerial();
-				if (tmpBuf != null) {
-					tmpLens = tmpBuf.length;
-					System.arraycopy(tmpBuf, 0, captureBuf, 0, tmpLens);
-					if (Parser.endChars) {
-						if (tmpLens < Parser.endCharsLens) {
-							tmpBuf = mComm.readSerial();
-							if (tmpBuf != null)
-								System.arraycopy(tmpBuf, 0, captureBuf, tmpLens, tmpBuf.length);
-						} else {
-							if (Parser.endCharsLens == 2) {
-								if (tmpBuf[tmpLens-1]!=Parser.endCharsBuf[1]
-										|| tmpBuf[tmpLens-2]!=Parser.endCharsBuf[0]) {
-									tmpBuf = mComm.readSerial();
-									if (tmpBuf != null)
-										System.arraycopy(tmpBuf, 0, captureBuf, tmpLens, tmpBuf.length);
-								}
-							} else {
-								if (tmpBuf[tmpLens-1]!=Parser.endCharsBuf[0]) {
-									tmpBuf = mComm.readSerial();
-									if (tmpBuf != null)
-										System.arraycopy(tmpBuf, 0, captureBuf, tmpLens, tmpBuf.length);
-								}
-							}
-						}
-					}
-					Message msg = mHandler.obtainMessage(RECEIVE, captureBuf);
-					mHandler.sendMessage(msg);
+				recvBuf = mComm.readSerial();
+				if (recvBuf != null) {
+					mHandler.sendMessage(mHandler.obtainMessage(RECEIVE, recvBuf));
 				}
 			}
 		}
 
 		@Override
 		public void run() {
-			getDataStream();
+			readSerialPort();
 		}
 		
 	}

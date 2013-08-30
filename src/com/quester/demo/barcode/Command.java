@@ -6,7 +6,7 @@ package com.quester.demo.barcode;
  * @author John.Jian
  * @version 1.2.7
  */
-public class Command {
+public interface Command {
 	
 	/*
 	 * Define the following abbreviations
@@ -27,7 +27,7 @@ public class Command {
 	 * SA	->	same
 	 * DFT	->	different
 	 * DB	->	databar
-	 * SEC	->	start char and end char
+	 * SEC	->	start symbol and end mark
 	 * IL	->	interleaved
 	 * SNTY	->	sensitivity
 	 * PSX	->	prefix and suffix
@@ -50,8 +50,8 @@ public class Command {
 	public static final byte FAILTURE = 0x15;
 	
 	/* Analog read mode settings */
-	public static final byte[] ANALOG_DOWN = {0x1b, 0x31};
-	public static final byte[] ANALOG_UP = {0x1b, 0x30};
+	public static final byte[] ANALOG_TRIIGER_DOWN = {0x1b, 0x31};
+	public static final byte[] ANALOG_TRIGGER_UP = {0x1b, 0x30};
 	public static final byte[] ANALOG_SENSOR = {0x1b, 0x32};
 	public static final byte[] ANALOG_CONTINUE = {0x1b, 0x33};
 	
@@ -95,7 +95,7 @@ public class Command {
 	public static final byte[] QUERY_CUSTOM_STYLE = {0x37};
 	public static final byte[] QUERY_CODEID = {0x38};
 	public static final byte[] QUERY_AIM = {0x39};
-	public static final byte[] QUERY_END_CHAR = {0x40};
+	public static final byte[] QUERY_END_MARK = {0x40};
 	public static final byte[] QUERY_LENS = {0x41};
 	public static final byte[] QUERY_PREFIX_SEQ = {0x42};
 	public static final byte[] QUERY_READ_MODE = {0x44, 0x30, 0x30, 0x30};
@@ -276,10 +276,10 @@ public class Command {
 	public static final String PKG_DIS = "0314000";	//DF
 	public static final String PKG_EN = "0314010";
 	
-	/* Data end char */
-	public static final String END_CHAR_DIS = "0309000";	//DF
-	public static final String END_CHAR_EN = "0309010";
-	public static final String CUSTOM_END_CHAR_VALUE = "0310000";	//2byte
+	/* Data end mark */
+	public static final String END_MARK_DIS = "0309000";	//DF
+	public static final String END_MARK_EN = "0309010";
+	public static final String CUSTOM_END_MARK_VALUE = "0310000";	//2byte
 	
 	/* Data capture settings */
 	public static final String CAPTURE_DIS = "0315000";	//DF
@@ -577,61 +577,5 @@ public class Command {
 	public static final String OCR_B_DF = "0600000";	//DF
 	public static final String OCR_B_DIS = "0600010";	//DF
 	public static final String OCR_B_EN = "0600020";
-	
-	
-	/**
-	 * Generate complete setting command
-	 * @param data general setting attributes
-	 * @return complete setting command
-	 */
-	public static byte[] getSettingCommand(String data) {
-		// Setting format: {PREFIX_LOWER/PREFIX_UPPER}{DATA}[=NUM/HEX/"STR"]
-		return (PREFIX_UPPER + data).getBytes();
-	}
-	
-	/**
-	 * Generate complete query command
-	 * @param data general query attributes
-	 * @return complete query command
-	 */
-	public static byte[] getQueryCommand(byte[] data) {
-		// Query format: {PREFIX_SEND}{DATA_LENS}{TYPES}{DATA}{LRC}
-		// Length:             2           2        1    lens   1
-		int lens = data.length + 1;
-		byte len0 = (byte)(lens>>8);
-		byte len1 = (byte)lens;
-		byte[] queryCmd = new byte[2+2+1+lens-1+1];
-		
-		// PERFIX_SEND -> queryCmd[0], queryCmd[1]
-		System.arraycopy(PREFIX_SEND, 0, queryCmd, 0, 2);
-		// DATA_LENS
-		queryCmd[2] = len0;
-		queryCmd[3] = len1;
-		// TYPES
-		queryCmd[4] = QUERY_TYPES;
-		// DATA
-		System.arraycopy(data, 0, queryCmd, 5, data.length);
-		// LRC
-		queryCmd[queryCmd.length-1] = getLRC(len1, QUERY_TYPES, data, data.length);
-		
-		Utils.log("queryCmd", queryCmd);
-		return queryCmd;
-	}
-	
-	/**
-	 * Get query or receive data LRC value
-	 * @param len lower byte of data lens
-	 * @param type data types
-	 * @param data stream
-	 * @return LRC value
-	 */
-	public static byte getLRC(byte lowLen, byte type, byte[] data, int dataLens) {
-		// LRC = 0xff^len^type^data
-		byte result = (byte)(0xff^lowLen^type);
-		for (int i = 0; i < dataLens; i++) {
-			result = (byte)(result^data[i]);
-		}
-		return result;
-	}
 	
 }
