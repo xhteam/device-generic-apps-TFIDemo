@@ -18,6 +18,32 @@
                 android:clickable="true" />
         </LinearLayout>
         <LinearLayout style="@style/RowStyle">
+            <ImageButton android:id="@+id/goto_nfc"
+                style="@style/ImageButtonStyle"
+                android:contentDescription="@string/title_nfc"
+                android:background="@drawable/ic_nfc" />
+            <TextView android:id="@+id/goto_nfc_either"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dip"
+                android:textColor="#FFFFFF"
+                android:text="@string/title_nfc"
+                android:clickable="true" />
+        </LinearLayout>
+        <LinearLayout style="@style/RowStyle">
+            <ImageButton android:id="@+id/goto_infrared"
+                style="@style/ImageButtonStyle"
+                android:contentDescription="@string/title_infrared"
+                android:background="@drawable/ic_infrared" />
+            <TextView android:id="@+id/goto_infrared_either"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dip"
+                android:textColor="#FFFFFF"
+                android:text="@string/title_infrared"
+                android:clickable="true" />
+        </LinearLayout>
+        <LinearLayout style="@style/RowStyle">
             <ImageButton android:id="@+id/goto_scard"
                 style="@style/ImageButtonStyle"
                 android:contentDescription="@string/title_scard"
@@ -30,13 +56,47 @@
                 android:text="@string/title_scard"
                 android:clickable="true" />
         </LinearLayout>
-        <LinearLayout style="@style/RowStyle"/>
-        <LinearLayout style="@style/RowStyle"/>
     </TableRow>
     <TableRow>
-        <LinearLayout style="@style/RowStyle"/>
-        <LinearLayout style="@style/RowStyle"/>
-        <LinearLayout style="@style/RowStyle"/>
+        <LinearLayout style="@style/RowStyle">
+            <ImageButton android:id="@+id/goto_gps"
+                style="@style/ImageButtonStyle"
+                android:contentDescription="@string/title_gps"
+                android:background="@drawable/ic_gps" />
+            <TextView android:id="@+id/goto_gps_either"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dip"
+                android:textColor="#FFFFFF"
+                android:text="@string/title_gps"
+                android:clickable="true" />
+        </LinearLayout>
+        <LinearLayout style="@style/RowStyle">
+            <ImageButton android:id="@+id/goto_sensor"
+                style="@style/ImageButtonStyle"
+                android:contentDescription="@string/title_sensor"
+                android:background="@drawable/ic_sensor" />
+            <TextView android:id="@+id/goto_sensor_either"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dip"
+                android:textColor="#FFFFFF"
+                android:text="@string/title_sensor"
+                android:clickable="true" />
+        </LinearLayout>
+        <LinearLayout style="@style/RowStyle">
+            <ImageButton android:id="@+id/goto_tp"
+                style="@style/ImageButtonStyle"
+                android:contentDescription="@string/title_tp"
+                android:background="@drawable/ic_touch" />
+            <TextView android:id="@+id/goto_tp_either"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dip"
+                android:textColor="#FFFFFF"
+                android:text="@string/title_tp"
+                android:clickable="true" />
+        </LinearLayout>
         <LinearLayout style="@style/RowStyle"/>
     </TableRow>
     

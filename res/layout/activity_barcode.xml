@@ -4,35 +4,32 @@
     android:background="#000000"
     android:orientation="vertical" >
 
-    <TextView
-        style="@style/WhiteSeparator" />
+    <TextView style="@style/WhiteSeparator" />
     
     <TextView android:id="@+id/barcode_info"
         android:layout_width="match_parent"
-        android:layout_height="0dip"
         android:layout_marginBottom="5dip"
         android:layout_weight="1"
         android:gravity="center"
         android:background="#F0F0F0"
+        android:padding="2dip"
         android:textColor="#000000"
         android:textSize="23sp"
         android:textStyle="bold"
         android:autoLink="web|email"
         android:linksClickable="true"
-        android:hint="@string/barcode_info" />
+        android:hint="@string/barcode_info_field" />
     
-    <TextView
-        style="@style/WhiteSeparator" />
+    <TextView style="@style/WhiteSeparator" />
     
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dip"
         android:layout_weight="1"
         android:orientation="vertical" >
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dip"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dip"
             android:orientation="vertical" >
             <TextView
 	            style="@style/TextViewStyle"
@@ -54,40 +51,35 @@
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dip"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:orientation="vertical" >
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dip"
                 android:layout_marginBottom="5dip"
                 android:orientation="horizontal" >
                 <EditText android:id="@+id/barcode_set_esn"
-	                android:layout_width="0dip"
 	                android:layout_height="wrap_content"
-	                android:layout_weight="4"
+	                android:layout_weight="3"
+	                android:padding="1dip"
 	                android:background="#F0F0F0"
 	                android:textColor="#000000"
 	                android:singleLine="true"
 	                android:digits="@string/barcode_esn_digits"
 	                android:hint="@string/barcode_set_esn" />
                 <TextView
-                    android:layout_width="0dip"
-                    android:layout_height="0dip"
                     android:layout_marginLeft="5dip"
                     android:layout_marginRight="5dip" />
 	            <Button android:id="@+id/barcode_modify_esn"
-	                android:layout_width="0dip"
 	                android:layout_height="wrap_content"
 	                android:layout_weight="1"
-	                android:clickable="true"
 	                android:textColor="#FFFFFF"
 	                android:text="@string/next" />
             </LinearLayout>
             <TextView
                 style="@style/TextViewStyle"
-                android:layout_marginTop="5dip"
+                android:layout_marginBottom="5dip"
                 android:textSize="17sp"
                 android:text="@string/barcode_scanner" />
             <RadioGroup android:id="@+id/barcode_scanner"
@@ -96,34 +88,22 @@
                 android:orientation="horizontal"
                 android:layout_marginBottom="5dip" >
                 <RadioButton android:id="@+id/barcode_trigger"
-                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left"
+                    android:layout_weight="1"
                     android:textColor="#FFFFFF"
-                    android:text="@string/barcode_trigger"
-                    android:checked="true" />
+                    android:text="@string/barcode_trigger" />
                 <RadioButton android:id="@+id/barcode_sensor"
-                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
+                    android:layout_weight="1"
                     android:textColor="#FFFFFF"
                     android:text="@string/barcode_sensor" />
                 <RadioButton android:id="@+id/barcode_continue"
-                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="right"
+                    android:layout_weight="1"
                     android:textColor="#FFFFFF"
                     android:text="@string/barcode_continue" />
             </RadioGroup>
-            <Button android:id="@+id/barcode_reset"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="5dip"
-                android:layout_marginBottom="5dip"
-                android:clickable="true"
-                android:textColor="#FFFFFF"
-                android:text="@string/barcode_reset_factory"/>
         </LinearLayout>
 	</LinearLayout>
+	
 </LinearLayout>

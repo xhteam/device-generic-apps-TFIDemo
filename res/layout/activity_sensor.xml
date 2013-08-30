@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/layoutStyle"
+    android:background="#000000"
+    android:orientation="vertical" >
+    
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dip"
+        android:textSize="21sp"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:text="@string/sensor_accel" />
+    <TextView android:id="@+id/sensor_accel_x"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dip"
+        android:padding="2dip"
+        android:textColor="#FFFFFF"
+        android:text="@string/sensor_x" />
+    <TextView android:id="@+id/sensor_accel_y"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dip"
+        android:padding="2dip"
+        android:textColor="#FFFFFF"
+        android:text="@string/sensor_y" />
+    <TextView android:id="@+id/sensor_accel_z"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dip"
+        android:padding="2dip"
+        android:textColor="#FFFFFF"
+        android:text="@string/sensor_z" />
+    
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dip"
+        android:textSize="21sp"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:text="@string/sensor_magnetic" />
+    <TextView android:id="@+id/sensor_magnetic_x"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dip"
+        android:padding="2dip"
+        android:textColor="#FFFFFF"
+        android:text="@string/sensor_x" />
+    <TextView android:id="@+id/sensor_magnetic_y"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dip"
+        android:padding="2dip"
+        android:textColor="#FFFFFF"
+        android:text="@string/sensor_y" />
+    <TextView android:id="@+id/sensor_magnetic_z"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dip"
+        android:padding="2dip"
+        android:textColor="#FFFFFF"
+        android:text="@string/sensor_z" />
+    
+</LinearLayout>

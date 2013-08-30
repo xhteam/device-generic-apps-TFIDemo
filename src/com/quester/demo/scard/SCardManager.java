@@ -1,5 +1,9 @@
-package com.quester.demo;
+package com.quester.demo.scard;
 
+/**
+ * Register the class for JNI that mapping winscard.h
+ * @author John.Jian
+ */
 public class SCardManager {
 	
 	/* Smart Card Native Methods */

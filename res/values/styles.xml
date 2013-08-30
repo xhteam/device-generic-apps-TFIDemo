@@ -64,5 +64,5 @@
         <item name="android:layout_marginBottom">5dip</item>
         <item name="android:clickable">true</item>
     </style>
-
+    
 </resources>

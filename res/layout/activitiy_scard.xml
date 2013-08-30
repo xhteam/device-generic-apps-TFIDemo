@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/layoutStyle"
-    android:background="#FFFFFF"
-    android:scrollbars="none" >
+    android:background="#F0F0F0"
+    android:scrollbars="vertical" >
+    
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -11,9 +12,10 @@
 	        android:layout_width="match_parent"
 	        android:layout_height="wrap_content"
 	        android:layout_marginTop="10dip"
+	        android:padding="2dip"
 	        android:textSize="17sp"
 	        android:textColor="#000000"
-	        android:hint="@string/scard_info" />
+	        android:hint="@string/scard_info_field" />
 	    <ImageButton android:id="@+id/scard_refresh"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
@@ -21,7 +23,7 @@
 	        android:layout_marginRight="10dip"
 	        android:layout_gravity="right"
 	        android:contentDescription="@string/scard_refresh"
-	        android:background="@drawable/ic_refresh"
-	        android:clickable="true" />
+	        android:background="@drawable/ic_refresh" />
     </LinearLayout>
+    
 </ScrollView>

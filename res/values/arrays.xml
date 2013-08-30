@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string-array name="barcode_mode_entries" translatable="false">
-        <item>@string/barcode_trigger</item>
-        <item>@string/barcode_sensor</item>
-        <item>@string/barcode_continue</item>
-    </string-array>
-</resources>
