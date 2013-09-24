@@ -1,73 +1,54 @@
 package com.quester.demo.barcode;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Binder;
+import android.content.IntentFilter;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.View.OnKeyListener;
 
 /**
- * QR engine background service, hardware button F1&F2 observer
+ * QR engine background service
  * @author John.Jian
  */
-public class BarcodeService extends Service implements OnKeyListener {
+public class BarcodeService extends Service {
+	
+	/*
+	 * QR engine reset path: /sys/class/gpio/gpio191/value
+	 * Reset: 0 to reset, 1 as normal
+	 * QR engine trigger path: /sys/class/gpio/gpio94/value
+	 * Trigger: 0 at least 10ms to trig scan, 1 as normal
+	 */
 	
 	private final String TAG = this.getClass().getName();
-	private final IBinder mBinder = new BarcodeBinder();
+	private final String ACTION_F1 = "action.KEYCODE_F1";
+	private final String ACTION_F2 = "action.KEYCODE_F2";
 	private long timeForKeycodeF1 = 0;
 	private long timeForKeycodeF2 = 0;
-	
-	public final String ACTION_TRIGGER = "action.barcode.trigger";
-	public boolean mResponse = false;
-	public boolean mTrigging = false;
-	public boolean mUiReady = false;
+	private KeyReceiver mReceiver;
 	
 	@Override
 	public IBinder onBind(Intent intent) {
-		return mBinder;
+		return null;
 	}
 	
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		Log.i(TAG, "Started barcode hardware button listener");
+		mReceiver = new KeyReceiver();
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(ACTION_F1);
+		filter.addAction(ACTION_F2);
+		registerReceiver(mReceiver, filter);
+		Log.i(TAG, "Started barcode key listener");
 	}
 	
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		Log.i(TAG, "Stop barcode hardware button listener");
-	}
-	
-	/*
-	 * QR engine reset path: /sys/class/gpio/gpio72/value
-	 * Reset: 0 to reset, 1 as normal
-	 * QR engine trigger path: /sys/class/gpio/gpio94/value
-	 * Trigger: 0 at least 10ms to trig scan, 1 as normal
-	 */
-	@Override
-	public boolean onKey(View v, int keyCode, KeyEvent event) {
-		if (!mTrigging) {
-			if (keyCode == KeyEvent.KEYCODE_F1) {
-				timeForKeycodeF1 = System.currentTimeMillis();
-			} else if (keyCode == KeyEvent.KEYCODE_F2) {
-				timeForKeycodeF2 = System.currentTimeMillis();
-			}
-			
-			if (Math.abs(timeForKeycodeF1 - timeForKeycodeF2) < 500) {
-				mResponse = false;
-				mTrigging = true;
-				Intent intent = new Intent();
-				intent.setAction(ACTION_TRIGGER);
-				sendBroadcast(intent);
-				requestQR();
-			}
-			return true;
-		}
-		return false;
+		unregisterReceiver(mReceiver);
+		Log.i(TAG, "Stop barcode key listener");
 	}
 	
 	private void requestQR() {
@@ -75,26 +56,29 @@ public class BarcodeService extends Service implements OnKeyListener {
 			public void run() {
 				try {
 					int counter = 10;
-					while (!mUiReady && counter > 0) {
+					while (!Status.ready && counter > 0) {
 						Thread.sleep(100);
+						counter--;
 					}
-					if (mUiReady) {
+					if (Status.ready) {
 						counter = 30; //waiting response for 3000ms
-						while (!mResponse && counter > 0) {
+						while (!Status.response && counter > 0) {
 							Thread.sleep(100);
+							counter--;
 						}
-						if (mResponse) {
+						if (Status.response) {
 							counter = 50;
-							while (mTrigging && counter > 0) {
+							while (Status.trigging && counter > 0) {
 								Thread.sleep(100);
+								counter--;
 							}
 						}
-						if (mTrigging) {
-							mTrigging = false;
+						if (Status.trigging) {
+							Status.trigging = false;
 							Log.i(TAG, "QR trigger fail");
 						}
 					} else {
-						mTrigging = false;
+						Status.trigging = false;
 						Log.i(TAG, "QR engine incomplete initialization");
 					}
 				} catch (InterruptedException e) {
@@ -104,10 +88,36 @@ public class BarcodeService extends Service implements OnKeyListener {
 		}).start();
 	}
 	
-	public class BarcodeBinder extends Binder {
-		BarcodeService getService() {
-			return BarcodeService.this;
-		}
+	private void sendIntent() {
+		Intent intent = new Intent(Status.ACTION_TRIGGER);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+		startActivity(intent);
 	}
+	
+	class KeyReceiver extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context cotext, Intent intent) {
+			if (!Status.trigging) {
+				String action = intent.getAction();
+				if (action.equals(ACTION_F1)) {
+					timeForKeycodeF1 = System.currentTimeMillis();
+				} else if (action.equals(ACTION_F2)) {
+					timeForKeycodeF2 = System.currentTimeMillis();
+				} else {
+					//
+				}
+				
+				if (Math.abs(timeForKeycodeF1 - timeForKeycodeF2) < 500) {
+					Status.response = false;
+					Status.trigging = true;
+					sendIntent();
+					requestQR();
+				}
+			}
+		}
+		
+	} 
 	
 }

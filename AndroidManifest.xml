@@ -9,7 +9,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
-    <uses-permission android:name="android.permission.HARDWARE_TEST" />
     
     <uses-sdk
         android:minSdkVersion="17"
@@ -21,10 +20,10 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.quester.demo.MainActivity"
+            android:name=".MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:launchMode="singleTask" >
+            android:launchMode="standard" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -32,32 +31,31 @@
         </activity>
         
         <activity
-            android:name="com.quester.demo.barcode.BarcodeActivity"
+            android:name=".barcode.BarcodeActivity"
             android:label="@string/title_barcode"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
-            android:noHistory="true"
             android:windowSoftInputMode="adjustUnspecified|stateHidden" >
             <intent-filter>
-                <action android:name="action.barcode.trigger" />
+                <action android:name="quester.intent.action.barcode" />
+                <category android:name="android.intent.category.DEFAULT"/> 
             </intent-filter>
         </activity>
         <service
-            android:name="com.quester.demo.barcode.BarcodeService"
+            android:name=".barcode.BarcodeService"
             android:enabled="true" >
         </service>
-        <receiver android:name="com.quester.demo.barcode.BarcodeReceiver">
+        <receiver android:name=".barcode.BarcodeReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
         
         <activity
-            android:name="com.quester.demo.nfc.NfcActivity"
+            android:name=".nfc.NfcActivity"
             android:label="@string/title_nfc"
             android:screenOrientation="portrait"
-            android:launchMode="singleTask"
-            android:noHistory="true" >
+            android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
                 <action android:name="android.nfc.action.TECH_DISCOVERED" />
@@ -70,44 +68,39 @@
         </activity>
         
         <activity
-            android:name="com.quester.demo.infrared.InfraredActivity"
+            android:name=".infrared.InfraredActivity"
             android:label="@string/title_infrared"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
-            android:noHistory="true"
             android:windowSoftInputMode="adjustUnspecified|stateHidden" >
         </activity>
         
         <activity
-            android:name="com.quester.demo.scard.SCardActivity"
+            android:name=".scard.SCardActivity"
             android:label="@string/title_scard"
             android:screenOrientation="portrait"
-            android:launchMode="singleTask"
-            android:noHistory="true" >
+            android:launchMode="singleTask" >
         </activity>
         
         <activity
-            android:name="com.quester.demo.gps.GpsActivity"
+            android:name=".gps.GpsActivity"
             android:label="@string/title_gps"
             android:screenOrientation="portrait"
-            android:launchMode="singleTask"
-            android:noHistory="true" >
+            android:launchMode="singleTask" >
         </activity>
         
         <activity
-            android:name="com.quester.demo.sensor.SensorActivity"
+            android:name=".sensor.SensorActivity"
             android:label="@string/title_sensor"
             android:screenOrientation="sensor"
-            android:launchMode="singleTask"
-            android:noHistory="true" >
+            android:launchMode="singleTask" >
         </activity>
         
         <activity
-            android:name="com.quester.demo.tp.TouchpanelActivity"
+            android:name=".tp.TouchpanelActivity"
             android:label="@string/title_tp"
             android:screenOrientation="portrait"
-            android:launchMode="singleTask"
-            android:noHistory="true" >
+            android:launchMode="singleTask" >
         </activity>
     </application>
 

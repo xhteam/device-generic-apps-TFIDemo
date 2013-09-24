@@ -11,6 +11,7 @@ import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
@@ -34,6 +35,7 @@ public class InfraredActivity extends Activity {
 	private final int[] bandrates = {2400, 1200};
 	private int checkedItem = 0;
 	private boolean mConnected = false;
+	private boolean mScreenOn = false;
 	private SerialComm mComm;
 	private CaptureRunnable mRunnable;
 	
@@ -41,10 +43,14 @@ public class InfraredActivity extends Activity {
 		public void handleMessage(Message msg) {
 			if (msg.what == RECEIVED) {
 				byte[] data = (byte[])msg.obj;
-				mRecvField.append(new String(data));
+				mRecvField.append(getNewLine(new String(data)));
 			}
 		}
 	};
+	
+	private String getNewLine(String msg) {
+		return (msg + "\n");
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +72,7 @@ public class InfraredActivity extends Activity {
 					String msg = mSendMsg.getText().toString();
 					mComm.writeSerial(msg.getBytes());
 					mSendMsg.setText("");
-					mSendField.append(msg + "\n");
+					mSendField.append(getNewLine(msg));
 				}
 			}
 		});
@@ -75,6 +81,10 @@ public class InfraredActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		if (!mScreenOn) {
+			getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+			mScreenOn = true;
+		}
 		mConnected = mComm.openSerial(bandrates[checkedItem]);
 		if (mConnected) {
 			mRunnable.setConnect(true);
@@ -87,6 +97,10 @@ public class InfraredActivity extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
+		if (mScreenOn) {
+			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+			mScreenOn = false;
+		}
 		if (mConnected) {
 			mRunnable.setConnect(false);
 		}

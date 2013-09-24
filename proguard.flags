@@ -1,3 +1,4 @@
 # Keep all Fragments in this package, which are used by reflection.
--keep class com.quester.demo.*Fragment
--keep class com.quester.demo.*Picker
+-keep class com.quester.demo.scard.SCardManager {
+*;
+}

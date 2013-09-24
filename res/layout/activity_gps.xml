@@ -4,20 +4,18 @@
     android:background="#000000"
     android:orientation="vertical" >
     
-    <ScrollView
+    <TextView android:id="@+id/gps_location"
         android:layout_width="match_parent"
+        android:layout_height="350dip"
         android:layout_weight="1"
         android:layout_marginTop="10dip"
-        android:layout_marginBottom="5dip"
-        android:background="#F0F0F0"
-        android:scrollbars="vertical" >
-        <TextView android:id="@+id/gps_location"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="2dip"
-            android:textColor="#000000"
-            android:hint="@string/gps_location_field" />
-    </ScrollView>
+    	android:layout_marginBottom="5dip"
+    	android:background="#F0F0F0"
+        android:padding="5dip"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:hint="@string/gps_location_field" />
     
     <TextView style="@style/WhiteSeparator" />
     <LinearLayout
@@ -27,6 +25,7 @@
         android:baselineAligned="false"
         android:orientation="horizontal" >
         <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="horizontal" >
@@ -44,6 +43,7 @@
 	            android:text="@string/gps_default_value" />
         </LinearLayout>
         <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="horizontal" >
@@ -63,12 +63,13 @@
     </LinearLayout>
     <TextView style="@style/WhiteSeparator" />
     
-    <ScrollView
+    <ScrollView android:id="@+id/gps_scnmea"
         android:layout_width="match_parent"
+        android:layout_height="350dip"
         android:layout_weight="1"
         android:layout_marginTop="5dip"
         android:background="#F0F0F0"
-        android:scrollbars="vertical" >
+		android:scrollbars="vertical" >
         <TextView android:id="@+id/gps_nmea"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

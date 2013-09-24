@@ -1,55 +1,57 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
+/*
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#define LOG_TAG "scardJni"
+#include "winscard.h"
+#include "wintypes.h"
+#include "pcsclite.h"
+#include "JNIHelp.h"
+#include "jni.h"
+#include "utils/Log.h"
+#include "android_runtime/AndroidRuntime.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <jni.h>
 
-#include "log.h"
-#include "winscard.h"
-#include "wintypes.h"
-#include "pcsclite.h"
-
-#ifdef __cplusplus
-}
-#endif
-
-static char className[] = "com/quester/demo/scard/SCardManager";
+namespace android {
 
 static SCARDCONTEXT hContext;
 static SCARDHANDLE hCard;
 static DWORD dwActiveProtocol;
 
-jint
-jni_establish_scard_context(JNIEnv* env, jobject thiz, jint dwScope)
-{
+static int establishSCardContext(JNIEnv* env, jobject thiz, jint dwScope) {
 	LONG ret;
 	ret = SCardEstablishContext((DWORD)dwScope, NULL, NULL, &hContext);
 	return ret;
 }
 
-jint
-jni_release_scard_context(JNIEnv* env, jobject thiz)
-{
+static int releaseSCardContext(JNIEnv* env, jobject thiz) {
 	LONG ret;
 	ret = SCardReleaseContext(hContext);
 	return ret;
 }
 
-jint
-jni_is_valid_scard_context(JNIEnv* env, jobject thiz)
-{
+static int isValidSCardContext(JNIEnv* env, jobject thiz) {
 	LONG ret;
 	ret = SCardIsValidContext(hContext);
 	return ret;
 }
 
-jint
-jni_connect_scard(JNIEnv* env, jobject thiz, jstring reader, jint dwShareMode,
-		jint dwPreferredProtocols)
-{
+static int connectSCard(JNIEnv* env, jobject thiz, jstring reader, jint dwShareMode, jint dwPreferredProtocols) {
 	LONG ret;
 	LPCSTR szReader;
 
@@ -65,44 +67,34 @@ jni_connect_scard(JNIEnv* env, jobject thiz, jstring reader, jint dwShareMode,
 	return ret;
 }
 
-jint
-jni_reconnect_scard(JNIEnv* env, jobject thiz, jint dwShareMode, jint dwPreferredProtocols,
-		jint dwInitialization)
-{
+static int reconnectSCard(JNIEnv* env, jobject thiz, jint dwShareMode, jint dwPreferredProtocols, 
+						jint dwInitialization) {
 	LONG ret;
 	ret = SCardReconnect(hCard, (DWORD)dwShareMode, (DWORD)dwPreferredProtocols,
 		(DWORD)dwInitialization, &dwActiveProtocol);
 	return ret;
 }
 
-jint
-jni_disconnect_scard(JNIEnv* env, jobject thiz, jint dwDisposition)
-{
+static int disconnectSCard(JNIEnv* env, jobject thiz, jint dwDisposition) {
 	LONG ret;
 	ret = SCardDisconnect(hCard, (DWORD)dwDisposition);
 	return ret;
 }
 
-jint
-jni_begin_scard_transaction(JNIEnv* env, jobject thiz)
-{
+static int beginSCardTransaction(JNIEnv* env, jobject thiz) {
 	LONG ret;
 	ret = SCardBeginTransaction(hCard);
 	return ret;
 }
 
-jint
-jni_end_scard_transaction(JNIEnv* env, jobject thiz, jint dwDisposition)
-{
+static int endSCardTransaction(JNIEnv* env, jobject thiz, jint dwDisposition) {
 	LONG ret;
 	ret = SCardEndTransaction(hCard, (DWORD)dwDisposition);
 	return ret;
 }
 
-jint
-jni_get_scard_status(JNIEnv* env, jobject thiz, jbyteArray reader, jobject readerLen,
-		jobject state, jobject prot, jbyteArray atr, jobject atrLen)
-{
+static int getSCardStatus(JNIEnv* env, jobject thiz, jbyteArray reader, jobject readerLen, jobject state, 
+						jobject prot, jbyteArray atr, jobject atrLen) {
 	LONG ret;
 	DWORD pcchReaderLen, dwState, dwProt, cbAtrLen;
 	jclass clazzInt;
@@ -110,12 +102,12 @@ jni_get_scard_status(JNIEnv* env, jobject thiz, jbyteArray reader, jobject reade
 
 	clazzInt = env->FindClass("java/lang/Integer");
 	if (NULL == clazzInt) {
-		LOGD("SCardGetStatus: FindClass failed");
+		ALOGE("SCardGetStatus: FindClass failed");
 		return -1;
 	}
 	fieldId = env->GetFieldID(clazzInt, "value", "I");
 	if (NULL == fieldId) {
-		LOGD("SCardGetStatus: GetFieldID failed");
+		ALOGE("SCardGetStatus: GetFieldID failed");
 		return -1;
 	}
 
@@ -135,10 +127,8 @@ jni_get_scard_status(JNIEnv* env, jobject thiz, jbyteArray reader, jobject reade
 	return ret;
 }
 
-jint
-jni_get_scard_status_change(JNIEnv* env, jobject thiz, jint dwTimeout, jstring reader,
-		jobject eventState, jbyteArray atr, jobject atrLen)
-{
+static int getSCardStatusChange(JNIEnv* env, jobject thiz, jint dwTimeout, jstring reader, jobject eventState, 
+								jbyteArray atr, jobject atrLen) {
 	LONG ret;
 	SCARD_READERSTATE rgReaderStates[1];
 	jclass clazzInt;
@@ -146,12 +136,12 @@ jni_get_scard_status_change(JNIEnv* env, jobject thiz, jint dwTimeout, jstring r
 
 	clazzInt = env->FindClass("java/lang/Integer");
 	if (NULL == clazzInt) {
-		LOGD("SCardGetStatusChange: FindClass failed");
+		ALOGE("SCardGetStatusChange: FindClass failed");
 		return -1;
 	}
 	fieldId = env->GetFieldID(clazzInt, "value", "I");
 	if (NULL == fieldId) {
-		LOGD("SCardGetStatusChange: GetFieldID failed");
+		ALOGE("SCardGetStatusChange: GetFieldID failed");
 		return -1;
 	}
 
@@ -171,10 +161,8 @@ jni_get_scard_status_change(JNIEnv* env, jobject thiz, jint dwTimeout, jstring r
 	return ret;
 }
 
-jint
-jni_control_scard(JNIEnv* env, jobject thiz, jint dwControlCode, jbyteArray sendBuffer,
-		jint sendLen, jbyteArray recvBuffer, jint recvLen, jobject lpBytesReturned)
-{
+static int controlSCard(JNIEnv* env, jobject thiz, jint dwControlCode, jbyteArray sendBuffer, jint sendLen, 
+						jbyteArray recvBuffer, jint recvLen, jobject lpBytesReturned) {
 	LONG ret;
 	DWORD lp;
 	jclass clazzInt;
@@ -182,12 +170,12 @@ jni_control_scard(JNIEnv* env, jobject thiz, jint dwControlCode, jbyteArray send
 
 	clazzInt = env->FindClass("java/lang/Integer");
 	if (NULL == clazzInt) {
-		LOGD("SCardControl: FindClass failed");
+		ALOGE("SCardControl: FindClass failed");
 		return -1;
 	}
 	fieldId = env->GetFieldID(clazzInt, "value", "I");
 	if (NULL == fieldId) {
-		LOGD("SCardControl: GetFieldID failed");
+		ALOGE("SCardControl: GetFieldID failed");
 		return -1;
 	}
 
@@ -203,10 +191,8 @@ jni_control_scard(JNIEnv* env, jobject thiz, jint dwControlCode, jbyteArray send
 	return ret;
 }
 
-jint
-jni_transmit_scard(JNIEnv* env, jobject thiz, jbyteArray sendBuffer, jint sendLen,
-		jbyteArray recvBuffer, jobject recvLen)
-{
+static int transmitSCard(JNIEnv* env, jobject thiz, jbyteArray sendBuffer, jint sendLen, jbyteArray recvBuffer, 
+						jobject recvLen) {
 	LONG ret;
 	DWORD cbRecvLen;
 	const SCARD_IO_REQUEST* pioSendPci;
@@ -216,12 +202,12 @@ jni_transmit_scard(JNIEnv* env, jobject thiz, jbyteArray sendBuffer, jint sendLe
 
 	clazzInt = env->FindClass("java/lang/Integer");
 	if (NULL == clazzInt) {
-		LOGD("SCardTransmit: FindClass failed");
+		ALOGE("SCardTransmit: FindClass failed");
 		return -1;
 	}
 	fieldId = env->GetFieldID(clazzInt, "value", "I");
 	if (NULL == fieldId) {
-		LOGD("SCardTransmit: GetFieldID failed");
+		ALOGE("SCardTransmit: GetFieldID failed");
 		return -1;
 	}
 
@@ -249,9 +235,7 @@ jni_transmit_scard(JNIEnv* env, jobject thiz, jbyteArray sendBuffer, jint sendLe
 	return ret;
 }
 
-jobjectArray
-jni_list_scard_reader_groups(JNIEnv* env, jobject thiz, jint hGroups)
-{
+static jobjectArray listSCardReaderGroups(JNIEnv* env, jobject thiz, jint hGroups) {
 	LONG ret;
 	DWORD cchGroups;
 	LPSTR ptr;
@@ -265,12 +249,12 @@ jni_list_scard_reader_groups(JNIEnv* env, jobject thiz, jint hGroups)
 
 	clazzString = env->FindClass("java/lang/String");
 	if (NULL == clazzString) {
-		LOGD("SCardListReaderGroups: FindClass failed");
+		ALOGE("SCardListReaderGroups: FindClass failed");
 		return NULL;
 	}
 	methodId = env->GetMethodID(clazzString, "<init>", "()V");
 	if(NULL == methodId) {
-		LOGD("SCardListReaderGroups: GetMethodID failed");
+		ALOGE("SCardListReaderGroups: GetMethodID failed");
 		return NULL;
 	}
 
@@ -278,7 +262,7 @@ jni_list_scard_reader_groups(JNIEnv* env, jobject thiz, jint hGroups)
 
 	ret = SCardListReaderGroups(hContext, (LPSTR)&mszGroups, &cchGroups);
 	if (ret != SCARD_S_SUCCESS) {
-		LOGD("SCardListReaderGroups: %s (0x%lX)", pcsc_stringify_error(ret), ret);
+		ALOGE("SCardListReaderGroups: %s (0x%lX)", pcsc_stringify_error(ret), ret);
 		if (mszGroups) {
 			SCardFreeMemory(hContext, mszGroups);
 		}
@@ -292,7 +276,7 @@ jni_list_scard_reader_groups(JNIEnv* env, jobject thiz, jint hGroups)
 		nbGroups++;
 	}
 	if (nbGroups == 0) {
-		LOGD("SCardListReaderGroups: No reader found");
+		ALOGE("SCardListReaderGroups: No reader found");
 		if (mszGroups) {
 			SCardFreeMemory(hContext, mszGroups);
 		}
@@ -315,9 +299,7 @@ jni_list_scard_reader_groups(JNIEnv* env, jobject thiz, jint hGroups)
 	return jgroups;
 }
 
-jobjectArray
-jni_list_scard_readers(JNIEnv* env, jobject thiz, jstring groups, jint hReaders)
-{
+static jobjectArray listSCardReaders(JNIEnv* env, jobject thiz, jstring groups, jint hReaders) {
 	LONG ret;
 	LPCSTR mszGroups;
 	DWORD cchReaders;
@@ -332,12 +314,12 @@ jni_list_scard_readers(JNIEnv* env, jobject thiz, jstring groups, jint hReaders)
 
 	clazzString = env->FindClass("java/lang/String");
 	if (NULL == clazzString) {
-		LOGD("SCardListReaders: FindClass failed");
+		ALOGE("SCardListReaders: FindClass failed");
 		return NULL;
 	}
 	methodId = env->GetMethodID(clazzString, "<init>", "()V");
 	if(NULL == methodId) {
-		LOGD("SCardListReaders: GetMethodID failed");
+		ALOGE("SCardListReaders: GetMethodID failed");
 		return NULL;
 	}
 
@@ -349,7 +331,7 @@ jni_list_scard_readers(JNIEnv* env, jobject thiz, jstring groups, jint hReaders)
 		env->ReleaseStringUTFChars(groups, mszGroups);
 	}
 	if (ret != SCARD_S_SUCCESS) {
-		LOGD("SCardListReaders: %s (0x%lX)", pcsc_stringify_error(ret), ret);
+		ALOGE("SCardListReaders: %s (0x%lX)", pcsc_stringify_error(ret), ret);
 		if (mszReaders) {
 			SCardFreeMemory(hContext, mszReaders);
 		}
@@ -363,7 +345,7 @@ jni_list_scard_readers(JNIEnv* env, jobject thiz, jstring groups, jint hReaders)
 		nbReaders++;
 	}
 	if (nbReaders == 0) {
-		LOGD("SCardListReaders: No reader found");
+		ALOGE("SCardListReaders: No reader found");
 		if (mszReaders) {
 			SCardFreeMemory(hContext, mszReaders);
 		}
@@ -386,17 +368,13 @@ jni_list_scard_readers(JNIEnv* env, jobject thiz, jstring groups, jint hReaders)
 	return jreaders;
 }
 
-jint
-jni_cancel_scard(JNIEnv* env, jobject thiz)
-{
+static int cancelSCard(JNIEnv* env, jobject thiz) {
 	LONG ret;
 	ret = SCardCancel(hContext);
 	return ret;
 }
 
-jint
-jni_get_scard_attrib(JNIEnv* env, jobject thiz, jint attrId, jbyteArray attr, jobject attrLen)
-{
+static int getSCardAttrib(JNIEnv* env, jobject thiz, jint attrId, jbyteArray attr, jobject attrLen) {
 	LONG ret;
 	DWORD cbAttrLen;
 	jclass clazzInt;
@@ -404,12 +382,12 @@ jni_get_scard_attrib(JNIEnv* env, jobject thiz, jint attrId, jbyteArray attr, jo
 
 	clazzInt = env->FindClass("java/lang/Integer");
 	if (clazzInt == NULL) {
-		LOGD("SCardGetAttrib: FindClass failed");
+		ALOGE("SCardGetAttrib: FindClass failed");
 		return -1;
 	}
 	fieldId = env->GetFieldID(clazzInt, "value", "I");
 	if (fieldId == NULL) {
-		LOGD("SCardGetAttrib: GetFieldID failed");
+		ALOGE("SCardGetAttrib: GetFieldID failed");
 		return -1;
 	}
 
@@ -423,9 +401,7 @@ jni_get_scard_attrib(JNIEnv* env, jobject thiz, jint attrId, jbyteArray attr, jo
 	return ret;
 }
 
-jint
-jni_set_scard_attrib(JNIEnv* env, jobject thiz, jint attrId, jbyteArray attr, jint attrLen)
-{
+static int setScardAttrib(JNIEnv* env, jobject thiz, jint attrId, jbyteArray attr, jint attrLen) {
 	LONG ret;
 	LPCBYTE pbAttr = (LPCBYTE)env->GetByteArrayElements(attr, NULL);
 	ret = SCardSetAttrib(hCard, attrId, pbAttr, attrLen);
@@ -433,113 +409,63 @@ jni_set_scard_attrib(JNIEnv* env, jobject thiz, jint attrId, jbyteArray attr, ji
 	return ret;
 }
 
-jstring
-jni_get_pcsc_ify_error(JNIEnv* env, jobject thiz, jint ret)
-{
+static jstring getPcscIfyError(JNIEnv* env, jobject thiz, jint ret) {
 	LPSTR stringify;
 	stringify = pcsc_stringify_error(ret);
 	return (env->NewStringUTF(stringify));
 }
 
-static JNINativeMethod methods[] = {
-		{"nativeEstablishSCardContext", "(I)I", (void*) jni_establish_scard_context },
-		{"nativeReleaseSCardContext", "()I", 	(void*) jni_release_scard_context },
-		{"nativeIsValidSCardContext", "()I", 	(void*) jni_is_valid_scard_context },
-		{"nativeConnectSCard", "(Ljava/lang/String;II)I",
-												(void*) jni_connect_scard },
-		{"nativeReconnectSCard", "(III)I", 		(void*) jni_reconnect_scard },
-		{"nativeDisconnectSCard", "(I)I", 		(void*) jni_disconnect_scard },
-		{"nativeBeginSCardTransaction", "()I", 	(void*) jni_begin_scard_transaction },
-		{"nativeEndSCardTransaction", "(I)I", 	(void*) jni_end_scard_transaction },
-		{"nativeGetSCardStatus", "([BLjava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;[BLjava/lang/Integer;)I",
-												(void*) jni_get_scard_status },
-		{"nativeGetSCardStatusChange", "(ILjava/lang/String;Ljava/lang/Integer;[BLjava/lang/Integer;)I",
-												(void*) jni_get_scard_status_change },
-		{"nativeControlSCard", "(I[BI[BILjava/lang/Integer;)I",
-												(void*) jni_control_scard },
-		{"nativeTransmitSCard", "([BI[BLjava/lang/Integer;)I",
-												(void*) jni_transmit_scard },
-		{"nativeListSCardReaderGroups", "(I)[Ljava/lang/String;",
-												(void*) jni_list_scard_reader_groups },
-		{"nativeListSCardReaders", "(Ljava/lang/String;I)[Ljava/lang/String;",
-												(void*) jni_list_scard_readers },
-		{"nativeCancelSCard", "()I", 			(void*) jni_cancel_scard },
-		{"nativeGetSCardAttrib", "(I[BLjava/lang/Integer;)I",
-												(void*) jni_get_scard_attrib },
-		{"nativeSetScardAttrib", "(I[BI)I", 	(void*) jni_set_scard_attrib },
-		{"nativeGetPcscIfyError", "(I)Ljava/lang/String;",
-												(void*) jni_get_pcsc_ify_error },
+static JNINativeMethod sMethods[] = {
+		{"establishSCardContext", "(I)I", (void*) establishSCardContext},
+		{"releaseSCardContext", "()I", (void*) releaseSCardContext},
+		{"isValidSCardContext", "()I", (void*) isValidSCardContext},
+		{"connectSCard", "(Ljava/lang/String;II)I", (void*) connectSCard},
+		{"reconnectSCard", "(III)I", (void*) reconnectSCard},
+		{"disconnectSCard", "(I)I", (void*) disconnectSCard},
+		{"beginSCardTransaction", "()I", (void*) beginSCardTransaction},
+		{"endSCardTransaction", "(I)I", (void*) endSCardTransaction},
+		{"getSCardStatus", "([BLjava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;[BLjava/lang/Integer;)I",
+			(void*) getSCardStatus},
+		{"getSCardStatusChange", "(ILjava/lang/String;Ljava/lang/Integer;[BLjava/lang/Integer;)I",
+			(void*) getSCardStatusChange},
+		{"controlSCard", "(I[BI[BILjava/lang/Integer;)I", (void*) controlSCard},
+		{"transmitSCard", "([BI[BLjava/lang/Integer;)I", (void*) transmitSCard},
+		{"listSCardReaderGroups", "(I)[Ljava/lang/String;", (void*) listSCardReaderGroups},
+		{"listSCardReaders", "(Ljava/lang/String;I)[Ljava/lang/String;", (void*) listSCardReaders},
+		{"cancelSCard", "()I", (void*) cancelSCard},
+		{"getSCardAttrib", "(I[BLjava/lang/Integer;)I", (void*) getSCardAttrib},
+		{"setScardAttrib", "(I[BI)I", (void*) setScardAttrib},
+		{"getPcscIfyError", "(I)Ljava/lang/String;", (void*) getPcscIfyError},
 };
 
-/*
- * Register several native methods for one class.
- */
-static int registerNativeMethods(JNIEnv* env, const char* className,
-		JNINativeMethod* gMethods, int numMethods)
+int register_com_quester_demo_scard_SCardManager(JNIEnv* env)
 {
-	jclass clazz;
-
-	clazz = env->FindClass(className);
-	if (clazz == NULL) {
-		LOGD("Native registration unable to find class '%s'", className);
-		return JNI_FALSE;
-	}
-	if (env->RegisterNatives(clazz, gMethods, numMethods) < 0) {
-		LOGD("RegisterNatives failed for '%s'", className);
-		return JNI_FALSE;
-	}
-
-	return JNI_TRUE;
+    return jniRegisterNativeMethods(env, "com/quester/demo/scard/SCardManager",
+                                    sMethods, NELEM(sMethods));
 }
 
-/*
- * Register native methods for all classes we know about.
- *
- * return JNI_TRUE on success.
- */
-static int registerNatives(JNIEnv* env)
-{
-	if (!registerNativeMethods(env, className, methods,
-			sizeof(methods) / sizeof(methods[0]))) {
-		return JNI_FALSE;
-	}
-
-	return JNI_TRUE;
-}
-
-// ----------------------------------------------------------------------------------------------
+}/* namespace android */
 
 /*
- * This is called by the VM when the shared library is first loaded.
+ * JNI Initialization
  */
-
-typedef union {
-	JNIEnv* env;
-	void* venv;
-} UnionJNIEnvToVoid;
-
-jint JNI_OnLoad(JavaVM* vm, void* reserved)
+jint JNI_OnLoad(JavaVM *jvm, void *reserved)
 {
-	UnionJNIEnvToVoid uenv;
-	uenv.venv = NULL;
-	jint result = -1;
-	JNIEnv* env = NULL;
+   JNIEnv *e;
+   int status;
 
-	LOGD("JNI_OnLoad");
+   ALOGV("SCardManager : loading JNI\n");
 
-	if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_4) != JNI_OK) {
-		LOGD("ERROR: GetEnv failed");
-		goto bail;
-	}
-	env = uenv.env;
+   // Check JNI version
+   if(jvm->GetEnv((void **)&e, JNI_VERSION_1_6)) {
+       ALOGE("JNI version mismatch error");
+      return JNI_ERR;
+   }
 
-	if (registerNatives(env) != JNI_TRUE) {
-		LOGD("ERROR: registerNatives failed");
-		goto bail;
-	}
+   if ((status = android::register_com_quester_demo_scard_SCardManager(e)) < 0) {
+       ALOGE("jni scard manager registration failure, status: %d", status);
+      return JNI_ERR;
+   }
 
-	result = JNI_VERSION_1_4;
-
-bail:
-	return result;
+   return JNI_VERSION_1_6;
 }

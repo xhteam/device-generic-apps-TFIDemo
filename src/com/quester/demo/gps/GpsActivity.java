@@ -1,7 +1,9 @@
 package com.quester.demo.gps;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Locale;
 
 import com.quester.demo.R;
 
@@ -13,7 +15,9 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 /**
@@ -23,22 +27,35 @@ import android.widget.TextView;
 public class GpsActivity extends Activity {
 	
 	private LocationManager mLocationManager;
+	private ScrollView mScnmea;
 	private TextView mLocationField, mNmeaField, mAvailSatellite, mUseSatellite;
-	
+	private final Handler mHandler = new Handler();
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_gps);
 		mLocationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
 		if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			Settings.Secure.setLocationProviderEnabled(getContentResolver(),
 					LocationManager.GPS_PROVIDER, true);
 		}
 		
+		mScnmea = (ScrollView)findViewById(R.id.gps_scnmea);
 		mLocationField = (TextView)findViewById(R.id.gps_location);
 		mNmeaField = (TextView)findViewById(R.id.gps_nmea);
 		mAvailSatellite = (TextView)findViewById(R.id.gps_available_satellites);
 		mUseSatellite = (TextView)findViewById(R.id.gps_useful_satellites);
 	}
+
+	private Runnable mScrollNmea = new Runnable() {
+		public void run() {
+			int off = mNmeaField.getMeasuredHeight() - mScnmea.getHeight();
+			if (off > 0) {
+				mScnmea.scrollTo(0, off);
+			}
+		}
+	};
 	
 	@Override
 	protected void onResume() {
@@ -129,6 +146,7 @@ public class GpsActivity extends Activity {
 		runOnUiThread(new Runnable() {
 			public void run() {
 				mNmeaField.append(getNewLine(timestamp + ", " + nmea));
+				mHandler.post(mScrollNmea);
 			}
 		});
 	}
@@ -137,12 +155,10 @@ public class GpsActivity extends Activity {
 		runOnUiThread(new Runnable() {
 			public void run() {
 				if (event == GpsStatus.GPS_EVENT_SATELLITE_STATUS) {
-					int satelliteCount = status.getMaxSatellites();
-					mAvailSatellite.setText(String.valueOf(satelliteCount));
-					
 					Iterator<GpsSatellite> it = status.getSatellites().iterator();
-					int inUse = 0;
+					int found = 0, inUse = 0;
 					while (it.hasNext()) {
+						found++;
 						GpsSatellite gs = it.next();
 						// The signal to noise ratio for the satellite
 						//gs.getSnr();
@@ -150,6 +166,7 @@ public class GpsActivity extends Activity {
 							inUse++;
 						}
 					}
+					mAvailSatellite.setText(String.valueOf(found));
 					mUseSatellite.setText(String.valueOf(inUse));
 				}
 			}
@@ -160,32 +177,44 @@ public class GpsActivity extends Activity {
 		runOnUiThread(new Runnable() {
 			public void run() {
 				StringBuilder sb = new StringBuilder();
-				sb.append(getNewLine("Device real time: " + new Date().toString()));
+				sb.append(getNewLine("RTC: " + dateFormat(new Date())));
 				if (location != null) {
-					String longitude = "longitude: " + location.getLongitude();
-					String latitude = ", latitude: " + location.getLatitude();
-					sb.append(getNewLine(longitude + latitude));
-					sb.append(getNewLine("UTC time: " + new Date(location.getTime()).toString()));
+					sb.append(getNewLine("UTC: " + dateFormat(new Date(location.getTime()))));
+					String longitude = getString(R.string.gps_longitude) + ": " + location.getLongitude();
+					String latitude = getString(R.string.gps_latitude) + ": " + location.getLatitude();
+					sb.append(getNewLine(longitude));
+					sb.append(getNewLine(latitude));
 					
-					if (location.hasAccuracy()) {
-						sb.append(getNewLine("accuracy: " + location.getAccuracy() + " meters"));
-					}
-					if (location.hasAltitude()) {
-						sb.append(getNewLine("altitude: " + location.getAltitude() + " meters"));
+					if (location.hasSpeed()) {
+						sb.append(getNewLine("*Speed: " + floatFormat(location.getSpeed()) + " m/s"));
 					}
 					if (location.hasBearing()) {
-						sb.append(getNewLine("bearing: " + location.getBearing() + " degrees"));
+						sb.append(getNewLine("*Bearing: " + floatFormat(location.getBearing()) + " d"));
 					}
-					if (location.hasSpeed()) {
-						sb.append(getNewLine("speed: " + location.getSpeed() + " meters/second"));
+					if (location.hasAltitude()) {
+						sb.append(getNewLine("*Altitude: " + doubleFormat(location.getAltitude()) + " m"));
+					}
+					if (location.hasAccuracy()) {
+						sb.append(getNewLine("*Accuracy: " + floatFormat(location.getAccuracy()) + " m"));
 					}
 				} else {
-					sb.append(getNewLine("invalid location, reloading.."));
+					sb.append(getNewLine("Invalid location, reloading.."));
 				}
-				sb.append(getNewLine(""));
-				mLocationField.append(sb.toString());
+				mLocationField.setText(sb.toString());
 			}
 		});
+	}
+	
+	private String dateFormat(Date date) {
+		return new SimpleDateFormat("MM/dd/yy HH:mm:ss", Locale.getDefault()).format(date);
+	}
+	
+	private String floatFormat(float num) {
+		return String.format(Locale.getDefault(), "%.2f", num);
+	}
+	
+	private String doubleFormat(double num) {
+		return String.format(Locale.getDefault(), "%.2f", num);
 	}
 	
 	private String getNewLine(String str) {

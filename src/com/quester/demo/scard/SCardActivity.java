@@ -208,7 +208,7 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 	
 	private String getErrors(int ret) {
 		String errors = getString(R.string.scard_reason) + 
-				mSCardManager.getPcscIfyError(ret) + "\n";
+				mSCardManager.scardPcscIfyError(ret) + "\n";
 		return errors;
 	}
 	
@@ -279,14 +279,14 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 			public void run() {
 				int ret = -1;
 				/* establish context */
-				ret = mSCardManager.establishSCardContext(SCARD_SCOPY_SYSTEM);
+				ret = mSCardManager.scardEstablishContext(SCARD_SCOPY_SYSTEM);
 				mHandler.sendMessage(mHandler.obtainMessage(ESTABLISH, ret, ret));
 				if (!responsed(ret)) {
 					return;
 				}
 				
 				/* is valid context */
-				ret = mSCardManager.isValidSCardContext();
+				ret = mSCardManager.scardIsValidContext();
 				mHandler.sendMessage(mHandler.obtainMessage(ISVALID, ret, ret));
 				if (!responsed(ret)) {
 					endProcessing();
@@ -294,7 +294,7 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 				}
 				
 				/* list reader groups  */
-				mGroups = mSCardManager.listSCardReaderGroups(SCARD_AUTOALLOCATE);
+				mGroups = mSCardManager.scardListReaderGroups(SCARD_AUTOALLOCATE);
 				if (mGroups == null) {
 					mHandler.sendMessage(mHandler.obtainMessage(GROUPS, -1, -1));
 				} else {
@@ -303,7 +303,7 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 				}
 				
 				/* list readers */
-				mReaders = mSCardManager.listSCardReaders(null, SCARD_AUTOALLOCATE);
+				mReaders = mSCardManager.scardListReaders(null, SCARD_AUTOALLOCATE);
 				if (mReaders == null) {
 					mHandler.sendMessage(mHandler.obtainMessage(READERS, -1, -1));
 					endProcessing();
@@ -313,7 +313,7 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 						SCARD_S_SUCCESS));
 				
 				/* connect */
-				ret = mSCardManager.connectSCard(mReaders[0], SCARD_SHARE_SHARED, 
+				ret = mSCardManager.scardConnect(mReaders[0], SCARD_SHARE_SHARED, 
 						SCARD_PROTOCOL_ANY);
 				mHandler.sendMessage(mHandler.obtainMessage(CONNECT, ret, ret));
 				if (!responsed(ret)) {
@@ -323,34 +323,34 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 				
 				/* get status */
 				initDatas();
-				ret = mSCardManager.getSCardStatus(reader, readerLen, state, prot, atr, atrLen);
+				ret = mSCardManager.scardGetStatus(reader, readerLen, state, prot, atr, atrLen);
 				mHandler.sendMessage(mHandler.obtainMessage(STATUS, ret, ret));
 				
 				/* begin transaction */
-				ret = mSCardManager.beginSCardTransaction();
+				ret = mSCardManager.scardBeginTransaction();
 				mHandler.sendMessage(mHandler.obtainMessage(BEGIN, ret, ret));
 				
 				/* transmit, exchange APDU */
 				initTransmitBuffers();
-				ret = mSCardManager.transmitSCard(sendBuf, sendBuf.length, recvBuf, recvLen);
+				ret = mSCardManager.scardTransmit(sendBuf, sendBuf.length, recvBuf, recvLen);
 				mHandler.sendMessage(mHandler.obtainMessage(TRANSMIT, ret, ret));
 				
 				/* end transaction */
-				ret = mSCardManager.endSCardTransaction(SCARD_LEAVE_CARD);
+				ret = mSCardManager.scardEndTransaction(SCARD_LEAVE_CARD);
 				mHandler.sendMessage(mHandler.obtainMessage(END, ret, ret));
 				
 				/* reconnect */
-				ret = mSCardManager.reconnectSCard(SCARD_SHARE_SHARED, 
+				ret = mSCardManager.scardReconnect(SCARD_SHARE_SHARED, 
 						SCARD_PROTOCOL_ANY, SCARD_LEAVE_CARD);
 				mHandler.sendMessage(mHandler.obtainMessage(RECONNECT, ret, ret));
 				
 				/* get status change */
 				eventState = Integer.valueOf(0);
-				ret = mSCardManager.getSCardStatusChange(0, mReaders[0], eventState, atr, atrLen);
+				ret = mSCardManager.scardGetStatusChange(0, mReaders[0], eventState, atr, atrLen);
 				mHandler.sendMessage(mHandler.obtainMessage(CHANGE, ret, ret));
 				
 				/* disconnect */
-				ret = mSCardManager.disconnectSCard(SCARD_UNPOWER_CARD);
+				ret = mSCardManager.scardDisconnect(SCARD_UNPOWER_CARD);
 				mHandler.sendMessage(mHandler.obtainMessage(DISCONNECT, ret, ret));
 				
 				endProcessing();
@@ -358,7 +358,7 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 			
 			private void endProcessing() {
 				int ret = -1;
-				ret = mSCardManager.releaseSCardContext();
+				ret = mSCardManager.scardReleaseContext();
 				mHandler.sendMessage(mHandler.obtainMessage(RELEASE, ret, ret));
 			}
 		}).start();

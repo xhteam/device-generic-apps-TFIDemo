@@ -12,6 +12,7 @@
     <string name="title_sensor">传感器</string>
     <string name="title_tp">触摸屏</string>
     
+    <string name="barcode_init">正在初始化，请稍候</string>
     <string name="barcode_info_field">条码信息</string>
     <string name="barcode_attr">扫描枪信息</string>
     <string name="barcode_sn">出厂序列号：</string>
@@ -26,6 +27,7 @@
     <string name="barcode_esn_digits">0123456789-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ</string>
     <string name="barcode_disconnect">扫描枪设备未连接</string>
     <string name="barcode_setting_failed">设置失败！</string>
+    <string name="barcode_capture">扫描条形码</string>
     
     <string name="nfc_info_field">NFC信息</string>
     
@@ -65,8 +67,10 @@
     
     <string name="gps_location_field">正在定位，请稍候…</string>
     <string name="gps_nmea_field">NMEA信息</string>
-    <string name="gps_available_satellites">可用卫星数：</string>
+    <string name="gps_available_satellites">搜索卫星数：</string>
     <string name="gps_useful_satellites">定位卫星数：</string>
+    <string name="gps_longitude">经度</string>
+    <string name="gps_latitude">纬度</string>
     <string name="gps_default_value">0</string>
     
     <string name="sensor_accel">加速器：</string>

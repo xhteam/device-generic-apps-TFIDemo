@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dip"
-        android:textSize="21sp"
+        android:textSize="23sp"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
         android:text="@string/sensor_accel" />
@@ -17,6 +17,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="5dip"
         android:padding="2dip"
+        android:textSize="17sp"
         android:textColor="#FFFFFF"
         android:text="@string/sensor_x" />
     <TextView android:id="@+id/sensor_accel_y"
@@ -24,6 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="5dip"
         android:padding="2dip"
+        android:textSize="17sp"
         android:textColor="#FFFFFF"
         android:text="@string/sensor_y" />
     <TextView android:id="@+id/sensor_accel_z"
@@ -31,6 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="5dip"
         android:padding="2dip"
+        android:textSize="17sp"
         android:textColor="#FFFFFF"
         android:text="@string/sensor_z" />
     
@@ -38,7 +41,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dip"
-        android:textSize="21sp"
+        android:textSize="23sp"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
         android:text="@string/sensor_magnetic" />
@@ -47,6 +50,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="5dip"
         android:padding="2dip"
+        android:textSize="17sp"
         android:textColor="#FFFFFF"
         android:text="@string/sensor_x" />
     <TextView android:id="@+id/sensor_magnetic_y"
@@ -54,6 +58,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="5dip"
         android:padding="2dip"
+        android:textSize="17sp"
         android:textColor="#FFFFFF"
         android:text="@string/sensor_y" />
     <TextView android:id="@+id/sensor_magnetic_z"
@@ -61,6 +66,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="5dip"
         android:padding="2dip"
+        android:textSize="17sp"
         android:textColor="#FFFFFF"
         android:text="@string/sensor_z" />
     

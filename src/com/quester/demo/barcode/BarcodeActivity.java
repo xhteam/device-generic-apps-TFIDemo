@@ -3,14 +3,11 @@ package com.quester.demo.barcode;
 import com.quester.demo.R;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.view.Gravity;
 import android.view.View;
@@ -18,6 +15,7 @@ import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -35,6 +33,7 @@ public class BarcodeActivity extends Activity {
 	private final int RECEIVE = 0x1;
 	private final int COMPLETE = 0x2;
 	private final int UNCOMPLETE = 0x3;
+	private final int TIMEOUT = 0x4;
 	private final String UNKNOWN = "unknown";
 	
 	private TextView mInfoField;
@@ -48,6 +47,7 @@ public class BarcodeActivity extends Activity {
 	private RadioButton mTriggerRb;
 	private RadioButton mSensorRb;
 	private RadioButton mContinueRb;
+	private ImageButton mButton;
 	
 	private boolean mConnected = false;
 	private boolean mInitializing = false;
@@ -55,7 +55,6 @@ public class BarcodeActivity extends Activity {
 	private boolean mPausing = false;
 	private boolean mEsnSetting = false;
 	private boolean mModeSetting = false;
-	private boolean mTrigging = false;
 	private boolean mScreenOn = false;
 	private int mReadMode = 0;
 	
@@ -66,29 +65,8 @@ public class BarcodeActivity extends Activity {
 	
 	private SerialComm mComm;
 	private CaptureRunnable mRunnable;
-	private BarcodeService mBarcodeService;
 	private SharedPreferences mPreferences;
 	private SharedPreferences.Editor mEditor;
-	
-	private ServiceConnection mConnection = new ServiceConnection() {
-		public void onServiceDisconnected(ComponentName className) {
-			mBarcodeService = null;
-		}
-		
-		public void onServiceConnected(ComponentName className, IBinder service) {
-			mBarcodeService = ((BarcodeService.BarcodeBinder)service).getService();
-		}
-	};
-	
-	private void doBindService() {
-		Intent intent = new Intent(BarcodeActivity.this, BarcodeService.class);
-		startService(intent);
-		bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-	}
-	
-	private void doUnbindService() {
-		unbindService(mConnection);
-	}
 	
 	/* Handler for ui */
 	private Handler mHandler = new Handler() {
@@ -98,8 +76,11 @@ public class BarcodeActivity extends Activity {
 				if (data.length == 1) {
 					switch (data[0]) {
 					case Command.SUCCESS:
-						if (mTrigging) {
-							mBarcodeService.mResponse = true;
+						if (Status.trigging) {
+							if (!Status.response) {
+								Status.response = true;
+								preventTimeout();
+							}
 						} else if (mEsnSetting) {
 							setClickable(true);
 							mEsnSetting = false;
@@ -114,33 +95,35 @@ public class BarcodeActivity extends Activity {
 						}
 						break;
 					case Command.FAILTURE:
+						setClickable(true);
 						if (mEsnSetting) {
-							setClickable(true);
 							mEsnSetting = false;
 							showToast(getString(R.string.barcode_esn)
 									+ getString(R.string.barcode_setting_failed));
 						} else if (mModeSetting) {
-							setClickable(true);
 							mModeSetting = false;
 							showToast(getString(R.string.barcode_scanner)
 									+ getString(R.string.barcode_setting_failed));
 						}
 						break;
 					case Command.DEV_REPLY:
-						isTriggerEvent();
+						setClickable(true);
+						handlerTrigger();
 						break;
 					default:
-						isTriggerEvent();
+						setClickable(true);
+						handlerTrigger();
 						setBarcodeInfo(byteArrayToString(data));
 						break;
 					}
 				} else {
+					setClickable(true);
 					if (data[0] == Command.PREFIX_RECV[0] 
 							&& data[1] == Command.PREFIX_RECV[1]) {
 						//query result, unrealized, refer Parser
-						isTriggerEvent();
+						handlerTrigger();
 					} else {
-						isTriggerEvent();
+						handlerTrigger();
 						setBarcodeInfo(byteArrayToString(data));
 					}
 				}
@@ -151,9 +134,10 @@ public class BarcodeActivity extends Activity {
 				if (mInitializing) {
 					mInitializing = false;
 				}
-				mBarcodeService.mUiReady = true;
+				Status.ready = true;
 				startCapture();
-				if (mTrigging) {
+				if (Status.trigging) {
+					setClickable(false);
 					mComm.triggerDown();
 				}
 			} else if (msg.what == UNCOMPLETE) {
@@ -164,15 +148,17 @@ public class BarcodeActivity extends Activity {
 					mInitializing = false;
 				}
 				setBarcodeInfo(getString(R.string.barcode_disconnect));
+			} else if (msg.what == TIMEOUT) {
+				handlerTrigger();
+				setClickable(true);
 			}
 		}
 		
 	};
 	
-	private void isTriggerEvent() {
-		if (mTrigging) {
-			mTrigging = false;
-			mBarcodeService.mTrigging = false;
+	private void handlerTrigger() {
+		if (Status.trigging) {
+			Status.trigging = false;
 			mComm.triggerUp();
 		}
 	}
@@ -189,7 +175,6 @@ public class BarcodeActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setProgressBar();
-		doBindService();
 		mComm = new SerialComm(this);
 		mRunnable = new CaptureRunnable();
 		mPreferences = getSharedPreferences("scanner_status", Context.MODE_PRIVATE);
@@ -210,7 +195,11 @@ public class BarcodeActivity extends Activity {
 				LinearLayout.LayoutParams.WRAP_CONTENT, 
 				LinearLayout.LayoutParams.WRAP_CONTENT);
 		
+		TextView mField = new TextView(this);
+		mField.setText(R.string.barcode_init);
+		
 		mLayout.addView(mBar, mBarParam);
+		mLayout.addView(mField, mBarParam);
 		setContentView(mLayout, mLayoutParam);
 	}
 	
@@ -229,7 +218,11 @@ public class BarcodeActivity extends Activity {
 			mScreenOn = true;
 		}
 		
-		mTrigging = getIntent().getAction().equals(mBarcodeService.ACTION_TRIGGER);
+		String action = getIntent().getAction();
+		if (action != null) {
+			Status.trigging = action.equals(Status.ACTION_TRIGGER);
+		}
+		
 		if (!mInitCompleted) {
 			mInitializing = true;
 			if (mComm.openSerial()) {
@@ -258,7 +251,10 @@ public class BarcodeActivity extends Activity {
 				mInitializing = false;
 			}
 		} else {
-			if (mTrigging) {
+			if (Status.trigging) {
+				mComm.openSerial();
+				startCapture();
+				setClickable(false);
 				mComm.triggerDown();
 			} else {
 				if (mComm.openSerial()) {
@@ -350,6 +346,7 @@ public class BarcodeActivity extends Activity {
 		mTriggerRb = (RadioButton)findViewById(R.id.barcode_trigger);
 		mSensorRb = (RadioButton)findViewById(R.id.barcode_sensor);
 		mContinueRb = (RadioButton)findViewById(R.id.barcode_continue);
+		mButton = (ImageButton)findViewById(R.id.barcode_capture);
 		
 		if (mReadMode == 0x30) {
 			mTriggerRb.setChecked(true);
@@ -362,7 +359,7 @@ public class BarcodeActivity extends Activity {
 		mEsnConfire.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (!mConnected) return;
-				isTriggerEvent();
+				handlerTrigger();
 				setClickable(false);
 				mDevEsn = mEsnEdit.getText().toString();
 				mEsnSetting = true;
@@ -373,7 +370,7 @@ public class BarcodeActivity extends Activity {
 		mGroup.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(RadioGroup group, int checkedId) {
 				if (!mConnected) return;
-				isTriggerEvent();
+				handlerTrigger();
 				setClickable(false);
 				mModeSetting = true;
 				if (checkedId == mTriggerRb.getId()) {
@@ -388,8 +385,35 @@ public class BarcodeActivity extends Activity {
 				}
 			}
 		});
+		mButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if (!mConnected) return;
+				setClickable(false);
+				Status.response = false;
+				Status.trigging = true;
+				mComm.triggerDown();
+			}
+		});
 		
 		mInitCompleted = true;
+	}
+	
+	private void preventTimeout() {
+		new Thread(new Runnable() {
+			public void run() {
+				int counter = 50;
+				while (!isFinishing() && Status.trigging && counter > 0) {
+					try {
+						Thread.sleep(100);
+						if ((--counter) == 0) {
+							mHandler.sendEmptyMessage(TIMEOUT);
+						}
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
 	}
 	
 	private void setClickable(boolean clickable) {
@@ -397,6 +421,7 @@ public class BarcodeActivity extends Activity {
 		mTriggerRb.setClickable(clickable);
 		mSensorRb.setClickable(clickable);
 		mContinueRb.setClickable(clickable);
+		mButton.setClickable(clickable);
 	}
 	
 	@Override
@@ -421,8 +446,7 @@ public class BarcodeActivity extends Activity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		mBarcodeService.mUiReady = false;
-		doUnbindService();
+		Status.ready = false;
 		mComm = null;
 		mRunnable = null;
 	}
@@ -445,13 +469,13 @@ public class BarcodeActivity extends Activity {
 	@SuppressWarnings("unused")
 	private void resetFactory() {
 		if (!mConnected) return;
-		isTriggerEvent();
+		handlerTrigger();
 		stopCapture();
 		mComm.resetFactory();
 		mEditor.putBoolean("scanner", false);
 		mEditor.commit();
 		mInitCompleted = false;
-		mBarcodeService.mUiReady = false;
+		Status.ready = false;
 		setProgressBar();
 		
 		mInitializing = true;
