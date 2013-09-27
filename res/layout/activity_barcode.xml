@@ -8,7 +8,8 @@
     
     <TextView android:id="@+id/barcode_info"
         android:layout_width="match_parent"
-        android:layout_height="350dip"
+        android:layout_height="wrap_content"
+		android:layout_weight="3"
         android:layout_marginBottom="5dip"
         android:gravity="center"
         android:background="#F0F0F0"
@@ -30,12 +31,12 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dip"
+            android:layout_marginBottom="5dip"
             android:orientation="vertical" >
             <TextView
 	            style="@style/TextViewStyle"
 	            android:layout_marginBottom="5dip"
-	            android:textSize="20sp"
+	            android:textSize="17sp"
 				android:textStyle="bold"
 	            android:text="@string/barcode_attr" />
             <TextView android:id="@+id/barcode_ver"
@@ -54,19 +55,19 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-			android:layout_marginBottom="10dip"
+			android:layout_marginBottom="5dip"
             android:layout_gravity="center"
             android:orientation="vertical" >
 			<TextView
                 style="@style/TextViewStyle"
 				android:layout_marginBottom="5dip"
-                android:textSize="20sp"
+                android:textSize="17sp"
 				android:textStyle="bold"
                 android:text="@string/barcode_scanner" />
             <RadioGroup android:id="@+id/barcode_scanner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-				android:layout_marginBottom="10dip"
+				android:layout_marginBottom="5dip"
                 android:orientation="horizontal" >
                 <RadioButton android:id="@+id/barcode_trigger"
                     android:layout_width="wrap_content"
@@ -123,7 +124,8 @@
 
 	<LinearLayout 
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_weight="2"
 		android:gravity="center" >
 		<ImageButton android:id="@+id/barcode_capture"
 			android:background="@drawable/ic_capture"
