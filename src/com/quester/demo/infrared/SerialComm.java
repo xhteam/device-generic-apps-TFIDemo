@@ -63,10 +63,24 @@ public class SerialComm {
 				int ret = mSerialPort.read(mBuffer);
 				if (ret > 0) {
 					mBuffer.rewind();
-					data = new byte[ret];
-					System.arraycopy(mBuffer.array(), 0, data, 0, ret);
+					byte[] recvBuf = new byte[ret];
+					System.arraycopy(mBuffer.array(), 0, recvBuf, 0, ret);
+					Thread.sleep(500);
+					mBuffer.clear();
+					int rets = mSerialPort.read(mBuffer);
+					mBuffer.rewind();
+					if (rets > 0) {
+						mBuffer.rewind();
+						data = new byte[ret+rets];
+						System.arraycopy(recvBuf, 0, data, 0, ret);
+						System.arraycopy(mBuffer.array(), 0, data, ret, rets);
+					} else {
+						data = recvBuf;
+					}
 				}
 			} catch (IOException e) {
+				Log.e(TAG, "readSerial, " + e.getMessage());
+			} catch (InterruptedException e) {
 				Log.e(TAG, "readSerial, " + e.getMessage());
 			}
 		}

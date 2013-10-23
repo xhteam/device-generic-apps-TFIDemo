@@ -15,6 +15,7 @@ import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 /**
@@ -28,6 +29,8 @@ public class InfraredActivity extends Activity {
 	
 	private TextView mRecvField;
 	private TextView mSendField;
+	private ScrollView mScRecv;
+	private ScrollView mScSend;
 	private EditText mSendMsg;
 	private Button mSendingBtn;
 	
@@ -44,6 +47,7 @@ public class InfraredActivity extends Activity {
 			if (msg.what == RECEIVED) {
 				byte[] data = (byte[])msg.obj;
 				mRecvField.append(getNewLine(new String(data)));
+				mHandler.post(mScrollRecv);
 			}
 		}
 	};
@@ -64,6 +68,8 @@ public class InfraredActivity extends Activity {
 	private void initLayout() {
 		mRecvField = (TextView)findViewById(R.id.infrared_recv);
 		mSendField = (TextView)findViewById(R.id.infrared_send);
+		mScRecv = (ScrollView)findViewById(R.id.infrared_recv_field);
+		mScSend = (ScrollView)findViewById(R.id.infrared_send_field);
 		mSendMsg = (EditText)findViewById(R.id.infrared_msg);
 		mSendingBtn = (Button)findViewById(R.id.infrared_sending);
 		mSendingBtn.setOnClickListener(new OnClickListener() {
@@ -73,10 +79,29 @@ public class InfraredActivity extends Activity {
 					mComm.writeSerial(msg.getBytes());
 					mSendMsg.setText("");
 					mSendField.append(getNewLine(msg));
+					mHandler.post(mScrollSend);
 				}
 			}
 		});
 	}
+
+	private Runnable mScrollRecv = new Runnable() {
+		public void run() {
+			int off = mRecvField.getMeasuredHeight() - mScRecv.getHeight();
+			if (off > 0) {
+				mScRecv.scrollTo(0, off);
+			}
+		}
+	};
+
+	private Runnable mScrollSend = new Runnable() {
+		public void run() {
+			int off = mSendField.getMeasuredHeight() - mScSend.getHeight();
+			if (off > 0) {
+				mScSend.scrollTo(0, off);
+			}
+		}
+	};
 	
 	@Override
 	protected void onResume() {
@@ -109,7 +134,7 @@ public class InfraredActivity extends Activity {
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.menu_infrared, menu);
+		//getMenuInflater().inflate(R.menu.menu_infrared, menu);
 		return true;
 	}
 	
@@ -122,7 +147,7 @@ public class InfraredActivity extends Activity {
 				public void onClick(DialogInterface dialog, int which) {
 					if (mComm.openSerial(bandrates[which])) {
 						checkedItem = which;
-						mRecvField.append("\nbandrate: " + bandrates[which] + "\n");
+						mRecvField.setText("bandrate: " + bandrates[which] + "\n");
 					} else {
 						mRecvField.setText(R.string.disconnect);
 					}

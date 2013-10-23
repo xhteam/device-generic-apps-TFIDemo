@@ -97,6 +97,8 @@ public class SerialComm {
 							data = new byte[ret+rets];
 							System.arraycopy(recvBuf, 0, data, 0, ret);
 							System.arraycopy(mBuffer.array(), 0, data, ret, rets);
+						} else {
+							data = recvBuf;
 						}
 					}
 				}

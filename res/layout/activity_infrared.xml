@@ -14,11 +14,11 @@
         android:textSize="21sp"
         android:textStyle="bold"
         android:text="@string/received" />
-     <ScrollView
+     <ScrollView android:id="@+id/infrared_recv_field"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="400dip"
         android:layout_marginBottom="5dip"
-        android:layout_weight="3"
+        android:layout_weight="4"
         android:background="#F0F0F0"
         android:scrollbars="vertical" >
         <TextView android:id="@+id/infrared_recv"
@@ -38,11 +38,11 @@
         android:textSize="21sp"
         android:textStyle="bold"
         android:text="@string/sending" />
-    <ScrollView
+    <ScrollView android:id="@+id/infrared_send_field"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="300dip"
         android:layout_marginBottom="5dip"
-        android:layout_weight="1"
+        android:layout_weight="3"
         android:background="#F0F0F0"
         android:scrollbars="vertical" >
         <TextView android:id="@+id/infrared_send"
@@ -60,7 +60,7 @@
         android:layout_marginBottom="5dip"
         android:orientation="horizontal" >
         <EditText android:id="@+id/infrared_msg"
-            android:layout_width="wrap_content"
+            android:layout_width="350dip"
             android:layout_height="wrap_content"
             android:layout_weight="3"
             android:padding="1dip"
@@ -74,7 +74,7 @@
             android:layout_marginLeft="5dip"
             android:layout_marginRight="5dip" />
         <Button android:id="@+id/infrared_sending"
-            android:layout_width="wrap_content"
+            android:layout_width="100dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="#FFFFFF"
