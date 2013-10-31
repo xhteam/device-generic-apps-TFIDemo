@@ -58,6 +58,7 @@ public class NfcActivity extends Activity implements CreateNdefMessageCallback {
 	private PendingIntent mIntent;
 	private IntentFilter[] mFilters;
 	private String[][] mTechLists;
+	private boolean mPause = true;
 	
 	private Handler mHandler = new Handler() {
 		public void handleMessage(Message msg) {
@@ -106,6 +107,11 @@ public class NfcActivity extends Activity implements CreateNdefMessageCallback {
 					/*new String[] {NfcBarcode.class.getName()}*/ };
 			
 			mNfcAdapter.setNdefPushMessageCallback(this, this);
+			if (!mNfcAdapter.isEnabled()) {
+				if(!mNfcAdapter.enable()) {
+					mTextView.setText("Could not enable nfc within airplane mode?");
+				}
+			}
 		}
 	}
 	
@@ -154,8 +160,7 @@ public class NfcActivity extends Activity implements CreateNdefMessageCallback {
 	@Override
 	protected void onNewIntent(Intent intent) {
 		//onResume gets called after this to handle the intent
-		//setIntent(intent);
-		handleIntent(intent);
+		setIntent(intent);
 	}
 	
 	@Override
@@ -164,19 +169,17 @@ public class NfcActivity extends Activity implements CreateNdefMessageCallback {
 		if (mNfcAdapter == null) {
 			return;
 		}
-		if (!mNfcAdapter.isEnabled()) {
-			if(!mNfcAdapter.enable()) {
-				mTextView.setText("Could not enable nfc within airplane mode?");
-				return;
-			}
+		if (mPause) {
+			mPause = false;
+			mNfcAdapter.enableForegroundDispatch(this, mIntent, mFilters, mTechLists);
 		}
-		mNfcAdapter.enableForegroundDispatch(this, mIntent, mFilters, mTechLists);
 		handleIntent(getIntent());
 	}
 	
 	@Override
 	protected void onPause() {
 		super.onPause();
+		mPause = true;
 		if (mNfcAdapter != null && mNfcAdapter.enable()) {
 			mNfcAdapter.disableForegroundDispatch(this);
 		}
@@ -500,57 +503,57 @@ public class NfcActivity extends Activity implements CreateNdefMessageCallback {
 				StringBuilder sb = new StringBuilder();
 				sb.append("NFC technology: MifareClassic\n");
 				sb.append("Tag id: " + id + "\n");
-				try {
-					MifareClassic mc = MifareClassic.get(tag);
-					mc.connect();
-					int type = mc.getType();
-					switch (type) {
-					case MifareClassic.TYPE_CLASSIC:
-						sb.append("|-- Type: classic\n");
-						break;
-					case MifareClassic.TYPE_PLUS:
-						sb.append("|-- Type: plus\n");
-						break;
-					case MifareClassic.TYPE_PRO:
-						sb.append("|-- Type: pro\n");
-						break;
-					default:
-						sb.append("|-- Type: unknown\n");
-						break;
-					}
-					
-					int sectorCount = mc.getSectorCount();
-					sb.append("|-- Tag size: " + mc.getSize() + "B\n");
-					sb.append("|-- Sector count: " + sectorCount + "\n");
-					sb.append("|-- Block count: " + mc.getBlockCount() + "\n");
-					
-					int blockCount = 0;
-					int blockIndex = 0;
-					for (int i = 0; i < sectorCount; i++) {
-						if (mc.authenticateSectorWithKeyA(i, MifareClassic.KEY_DEFAULT) 
-								|| mc.authenticateSectorWithKeyA(i, MifareClassic.KEY_MIFARE_APPLICATION_DIRECTORY) 
-								|| mc.authenticateSectorWithKeyA(i, MifareClassic.KEY_NFC_FORUM)) {
-							sb.append("|  |-- Successful authentication of sector " + i + " with key A\n");
-						} else if (mc.authenticateSectorWithKeyB(i, MifareClassic.KEY_DEFAULT) 
-								|| mc.authenticateSectorWithKeyB(i, MifareClassic.KEY_MIFARE_APPLICATION_DIRECTORY) 
-								|| mc.authenticateSectorWithKeyB(i, MifareClassic.KEY_NFC_FORUM)) {
-							sb.append("|  |-- Successful authentication of sector " + i + " with key B\n");
-						} else {
-							sb.append("|  |-- Failed authentication of sector " + i + " with key A & B\n");
-							continue;
-						}
-						blockCount = mc.getBlockCountInSector(i);
-						blockIndex = mc.sectorToBlock(i);
-						for (int j = 0; j < blockCount; j++) {
-							sb.append("|  |  |-- Block " + blockIndex + ": " 
-									+ byteArrayToString(mc.readBlock(blockIndex)) + "\n");
-							blockIndex++;
-						}
-					}
-					mc.close();
-				} catch (IOException e) {
-					Log.i(TAG, "MifareClassic, " + e.getMessage());
-				}
+//				try {
+//					MifareClassic mc = MifareClassic.get(tag);
+//					mc.connect();
+//					int type = mc.getType();
+//					switch (type) {
+//					case MifareClassic.TYPE_CLASSIC:
+//						sb.append("|-- Type: classic\n");
+//						break;
+//					case MifareClassic.TYPE_PLUS:
+//						sb.append("|-- Type: plus\n");
+//						break;
+//					case MifareClassic.TYPE_PRO:
+//						sb.append("|-- Type: pro\n");
+//						break;
+//					default:
+//						sb.append("|-- Type: unknown\n");
+//						break;
+//					}
+//					
+//					int sectorCount = mc.getSectorCount();
+//					sb.append("|-- Tag size: " + mc.getSize() + "B\n");
+//					sb.append("|-- Sector count: " + sectorCount + "\n");
+//					sb.append("|-- Block count: " + mc.getBlockCount() + "\n");
+//					
+//					int blockCount = 0;
+//					int blockIndex = 0;
+//					for (int i = 0; i < sectorCount; i++) {
+//						if (mc.authenticateSectorWithKeyA(i, MifareClassic.KEY_DEFAULT) 
+//								|| mc.authenticateSectorWithKeyA(i, MifareClassic.KEY_MIFARE_APPLICATION_DIRECTORY) 
+//								|| mc.authenticateSectorWithKeyA(i, MifareClassic.KEY_NFC_FORUM)) {
+//							sb.append("|  |-- Successful authentication of sector " + i + " with key A\n");
+//						} else if (mc.authenticateSectorWithKeyB(i, MifareClassic.KEY_DEFAULT) 
+//								|| mc.authenticateSectorWithKeyB(i, MifareClassic.KEY_MIFARE_APPLICATION_DIRECTORY) 
+//								|| mc.authenticateSectorWithKeyB(i, MifareClassic.KEY_NFC_FORUM)) {
+//							sb.append("|  |-- Successful authentication of sector " + i + " with key B\n");
+//						} else {
+//							sb.append("|  |-- Failed authentication of sector " + i + " with key A & B\n");
+//							continue;
+//						}
+//						blockCount = mc.getBlockCountInSector(i);
+//						blockIndex = mc.sectorToBlock(i);
+//						for (int j = 0; j < blockCount; j++) {
+//							sb.append("|  |  |-- Block " + blockIndex + ": " 
+//									+ byteArrayToString(mc.readBlock(blockIndex)) + "\n");
+//							blockIndex++;
+//						}
+//					}
+//					mc.close();
+//				} catch (IOException e) {
+//					Log.i(TAG, "MifareClassic, " + e.getMessage());
+//				}
 				mHandler.sendMessage(mHandler.obtainMessage(TECH_MIFARECLASSIC, sb.toString()));
 			}
 		}).start();
@@ -570,29 +573,29 @@ public class NfcActivity extends Activity implements CreateNdefMessageCallback {
 				StringBuilder sb = new StringBuilder();
 				sb.append("NFC technology: MifareUltralight\n");
 				sb.append("Tag id: " + id + "\n");
-				try {
-					MifareUltralight mu = MifareUltralight.get(tag);
-					mu.connect();
-					int type = mu.getType();
-					if (type == MifareUltralight.TYPE_ULTRALIGHT) {
-						sb.append("|-- Type: MIFARE Ultralight\n");
-						for (int i = 0; i < 4; i++) {
-							sb.append("|-- Page " + (i*4) + "~" + ((i+1)*4-1) + ": " 
-									+ byteArrayToString(mu.readPages(i)) + "\n");
-						}
-					} else if (type == MifareUltralight.TYPE_ULTRALIGHT_C) {
-						sb.append("|-- Type: MIFARE Ultralight C\n");
-						for (int i = 0; i < 12; i++) {
-							sb.append("|-- Page " + (i*4) + "~" + ((i+1)*4-1) + ": " 
-									+ byteArrayToString(mu.readPages(i)) + "\n");
-						}
-					} else {
-						sb.append("|-- Type: unknown\n");
-					}
-					mu.close();
-				} catch (IOException e) {
-					Log.i(TAG, "MifareUtralight, " + e.getMessage());
-				}
+//				try {
+//					MifareUltralight mu = MifareUltralight.get(tag);
+//					mu.connect();
+//					int type = mu.getType();
+//					if (type == MifareUltralight.TYPE_ULTRALIGHT) {
+//						sb.append("|-- Type: MIFARE Ultralight\n");
+//						for (int i = 0; i < 4; i++) {
+//							sb.append("|-- Page " + (i*4) + "~" + ((i+1)*4-1) + ": " 
+//									+ byteArrayToString(mu.readPages(i)) + "\n");
+//						}
+//					} else if (type == MifareUltralight.TYPE_ULTRALIGHT_C) {
+//						sb.append("|-- Type: MIFARE Ultralight C\n");
+//						for (int i = 0; i < 12; i++) {
+//							sb.append("|-- Page " + (i*4) + "~" + ((i+1)*4-1) + ": " 
+//									+ byteArrayToString(mu.readPages(i)) + "\n");
+//						}
+//					} else {
+//						sb.append("|-- Type: unknown\n");
+//					}
+//					mu.close();
+//				} catch (IOException e) {
+//					Log.i(TAG, "MifareUtralight, " + e.getMessage());
+//				}
 				mHandler.sendMessage(mHandler.obtainMessage(TECH_MIFAREULTRALIGHT, sb.toString()));
 			}
 		}).start();
