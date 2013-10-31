@@ -3,6 +3,8 @@
 
     <string name="app_name">TFIDemo</string>
     <string name="action_settings">设置</string>
+	<string name="settings_success">成功</string>
+	<string name="settings_fail">失败</string>
     
     <string name="title_barcode">扫描枪</string>
     <string name="title_nfc">近场通讯</string>

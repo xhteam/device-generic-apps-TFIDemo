@@ -1,5 +1,7 @@
 package com.quester.demo.infrared;
 
+import java.io.UnsupportedEncodingException;
+
 import com.quester.demo.R;
 
 import android.app.Activity;
@@ -17,6 +19,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Foreground activity that shows information about Infrared engine
@@ -26,6 +29,7 @@ import android.widget.TextView;
 public class InfraredActivity extends Activity {
 	
 	private final int RECEIVED = 1;
+	private final int BAUDRATE = 2;
 	
 	private TextView mRecvField;
 	private TextView mSendField;
@@ -34,8 +38,8 @@ public class InfraredActivity extends Activity {
 	private EditText mSendMsg;
 	private Button mSendingBtn;
 	
-	private final String[] items = {"2400", "1200"};
-	private final int[] bandrates = {2400, 1200};
+	private final String[] items = {"1200", "2400"};
+	private final int[] baudrates = {1200, 2400};
 	private int checkedItem = 0;
 	private boolean mConnected = false;
 	private boolean mScreenOn = false;
@@ -46,11 +50,30 @@ public class InfraredActivity extends Activity {
 		public void handleMessage(Message msg) {
 			if (msg.what == RECEIVED) {
 				byte[] data = (byte[])msg.obj;
-				mRecvField.append(getNewLine(new String(data)));
+				if (data != null) {
+					try {
+						String str = new String(data, "utf-8");
+						mRecvField.append(str);
+					} catch (UnsupportedEncodingException e) {
+						return;
+					}
+				}
 				mHandler.post(mScrollRecv);
+			} else if (msg.what == BAUDRATE) {
+				String baud = getString(R.string.bandrate) + baudrates[checkedItem] 
+					+ getString(R.string.action_settings);
+				if (msg.arg1 == 1) {
+					showToast(baud + getString(R.string.settings_success));
+				} else {
+					showToast(baud + getString(R.string.settings_fail));
+				}
 			}
 		}
 	};
+
+	private void showToast(String msg) {
+		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+	}
 	
 	private String getNewLine(String msg) {
 		return (msg + "\n");
@@ -76,10 +99,16 @@ public class InfraredActivity extends Activity {
 			public void onClick(View v) {
 				if (mConnected) {
 					String msg = mSendMsg.getText().toString();
-					mComm.writeSerial(msg.getBytes());
-					mSendMsg.setText("");
-					mSendField.append(getNewLine(msg));
-					mHandler.post(mScrollSend);
+					if (msg.length() > 0) {
+						try {
+							mComm.writeSerial(msg.getBytes("utf-8"));
+							mSendMsg.setText("");
+							mSendField.append(getNewLine(msg));
+							mHandler.post(mScrollSend);
+						} catch (UnsupportedEncodingException e) {
+							return;
+						}
+					}
 				}
 			}
 		});
@@ -110,7 +139,7 @@ public class InfraredActivity extends Activity {
 			getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 			mScreenOn = true;
 		}
-		mConnected = mComm.openSerial(bandrates[checkedItem]);
+		mConnected = mComm.openSerial(baudrates[checkedItem]);
 		if (mConnected) {
 			mRunnable.setConnect(true);
 			new Thread(mRunnable).start();
@@ -128,13 +157,13 @@ public class InfraredActivity extends Activity {
 		}
 		if (mConnected) {
 			mRunnable.setConnect(false);
+			mComm.closeSerial();
 		}
-		mComm.closeSerial();
 	}
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		//getMenuInflater().inflate(R.menu.menu_infrared, menu);
+		getMenuInflater().inflate(R.menu.menu_infrared, menu);
 		return true;
 	}
 	
@@ -145,11 +174,19 @@ public class InfraredActivity extends Activity {
 			builder.setTitle(R.string.bandrate);
 			builder.setSingleChoiceItems(items, checkedItem, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					if (mComm.openSerial(bandrates[which])) {
-						checkedItem = which;
-						mRecvField.setText("bandrate: " + bandrates[which] + "\n");
+					if (mConnected) {
+						mRunnable.setConnect(false);
+						mComm.closeSerial();
+					}
+					checkedItem = which;
+					mConnected = mComm.openSerial(baudrates[checkedItem]);
+					if (mConnected) {
+						mRunnable.setConnect(true);
+						new Thread(mRunnable).start();
+						mHandler.sendMessage(mHandler.obtainMessage(BAUDRATE, 1, 1));
 					} else {
 						mRecvField.setText(R.string.disconnect);
+						mHandler.sendMessage(mHandler.obtainMessage(BAUDRATE, 0, 0));
 					}
 					dialog.dismiss();
 				}
