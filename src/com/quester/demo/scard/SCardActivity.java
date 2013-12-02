@@ -1,11 +1,14 @@
 package com.quester.demo.scard;
 
+import com.quester.android.platform_library.PcscdManager;
 import com.quester.demo.R;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
@@ -30,10 +33,15 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 	private static final int TRANSMIT = 0xb;
 	private static final int GROUPS = 0xc;
 	private static final int READERS = 0xd;
+	private static final int SERVICE = 0xf;
+
+	private static final int SERVICE_DELAY = 2000;
 	
+	private PcscdManager mPcscdManager;
 	private SCardManager mSCardManager;
 	private TextView mTextView;
 	private ImageButton mButton;
+	private ProgressDialog mServiceDialog;
 	private String[] mGroups;
 	private String[] mReaders;
 	
@@ -194,6 +202,10 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 					mTextView.append(getErrors(ret));
 				}
 				break;
+			case SERVICE:
+				cancelProgressDialog();
+				processing();
+				break;
 			default:
 				break;
 			}
@@ -238,6 +250,22 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 		return protocol;
 	}
 	
+	private void setProgressDialog() {
+		if (mServiceDialog == null) {
+			mServiceDialog = new ProgressDialog(this, ProgressDialog.STYLE_SPINNER);
+			mServiceDialog.setTitle("Starting Service");
+			mServiceDialog.setMessage("Please wait..");
+		}
+		mServiceDialog.setCancelable(false);
+		mServiceDialog.show();
+	}
+	
+	private void cancelProgressDialog() {
+		if (mServiceDialog != null) {
+			mServiceDialog.dismiss();
+		}
+	}
+	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activitiy_scard);
@@ -249,8 +277,8 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 				processing();
 			}
 		});
+		mPcscdManager = new PcscdManager();
 		mSCardManager = new SCardManager();
-		processing();
 	}
 	
 	private void initDatas() {
@@ -272,12 +300,41 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		if (mPcscdManager.startService()) {
+			if (!mButton.isEnabled()) {
+				mButton.setEnabled(true);
+			}
+			setProgressDialog();
+			new Thread(new Runnable() {
+				public void run() {
+					try {
+						Thread.sleep(SERVICE_DELAY);
+					} catch (Exception e) {
+						// NA
+					} finally {
+						mHandler.sendEmptyMessage(SERVICE);
+					}
+				}
+			}).start();
+		} else {
+			if (mButton.isEnabled()) {
+				mButton.setEnabled(false);
+			}
+			mTextView.setText("Start pcscd service failure!");
+		}
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		mPcscdManager.stopService();
 	}
 	
 	private void processing() {
 		new Thread(new Runnable() {
 			public void run() {
 				int ret = -1;
+				
 				/* establish context */
 				ret = mSCardManager.scardEstablishContext(SCARD_SCOPY_SYSTEM);
 				mHandler.sendMessage(mHandler.obtainMessage(ESTABLISH, ret, ret));
