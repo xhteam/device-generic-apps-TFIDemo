@@ -2,6 +2,7 @@ package com.quester.demo;
 
 import com.quester.demo.barcode.BarcodeActivity;
 import com.quester.demo.gps.GpsActivity;
+import com.quester.demo.headset.HeadsetSettings;
 import com.quester.demo.infrared.InfraredActivity;
 import com.quester.demo.nfc.NfcActivity;
 import com.quester.demo.scard.SCardActivity;
@@ -61,6 +62,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		touch.setOnClickListener(this);
 		TextView dtouch = (TextView)findViewById(R.id.goto_tp_either);
 		dtouch.setOnClickListener(this);
+		
+		ImageButton headset = (ImageButton)findViewById(R.id.goto_headset);
+		headset.setOnClickListener(this);
+		TextView dheadset = (TextView)findViewById(R.id.goto_headset_either);
+		dheadset.setOnClickListener(this);
 	}
 
 	@Override
@@ -86,6 +92,9 @@ public class MainActivity extends Activity implements OnClickListener {
 			startActivity(mIntent);
 		} else if (id == R.id.goto_tp || id == R.id.goto_tp_either) {
 			Intent mIntent = new Intent(MainActivity.this, TouchpanelActivity.class);
+			startActivity(mIntent);
+		} else if (id == R.id.goto_headset || id == R.id.goto_headset_either) {
+			Intent mIntent = new Intent(MainActivity.this, HeadsetSettings.class);
 			startActivity(mIntent);
 		}
 	}

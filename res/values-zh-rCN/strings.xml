@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="action_settings">设置</string>
+	<string name="settings_success">成功</string>
+	<string name="settings_fail">失败</string>
+    
+    <string name="title_barcode">扫描枪</string>
+    <string name="title_nfc">近场通讯</string>
+    <string name="title_infrared">红外通讯</string>
+    <string name="title_scard">智能卡</string>
+    <string name="title_gps">GPS定位</string>
+    <string name="title_sensor">传感器</string>
+    <string name="title_tp">触摸屏</string>
+    <string name="title_headset">耳机选项</string>
+    
+    <string name="barcode_init">正在初始化，请稍候</string>
+    <string name="barcode_info_field">条码信息</string>
+    <string name="barcode_attr">扫描枪信息</string>
+    <string name="barcode_sn">出厂序列号：</string>
+    <string name="barcode_date">出厂日期：</string>
+    <string name="barcode_ver">固件版本：</string>
+    <string name="barcode_esn">电子序列号：</string>
+    <string name="barcode_set_esn">输入新电子序列号</string>
+    <string name="barcode_scanner">扫描模式</string>
+    <string name="barcode_trigger">触发模式</string>
+    <string name="barcode_sensor">感应模式</string>
+    <string name="barcode_continue">连续模式</string>
+    <string name="barcode_disconnect">扫描枪设备未连接</string>
+    <string name="barcode_setting_failed">设置失败！</string>
+    <string name="barcode_capture">扫描条形码</string>
+    
+    <string name="nfc_info_field">NFC信息</string>
+    
+    <string name="infrared_send_field">发送信息</string>
+    <string name="infrared_recv_field">接收信息</string>
+    <string name="infrared_send_prompt">输入需要发送的信息</string>
+    <string name="infrared_sending">发送</string>
+    
+    <string name="bandrate">波特率</string>
+    
+    <string name="scard_info_field">智能卡信息</string>
+    <string name="scard_establish_context">建立智能卡Context：</string>
+    <string name="scard_release_context">释放智能卡Context：</string>
+    <string name="scard_is_valid_context">智能卡Context是否可用：</string>
+    <string name="scard_connect_state">智能卡连接状态：</string>
+    <string name="scard_connecting">正在连接：</string>
+    <string name="scard_begin_transaction">智能卡启动事务：</string>
+    <string name="scard_end_transaction">智能卡结束事务：</string>
+    <string name="scard_statues">获取智能卡状态：</string>
+    <string name="scard_statues_change">获取智能卡状态变化：</string>
+    <string name="scard_transmit">智能卡交换APDU：</string>
+    <string name="scard_groups">获取智能卡Groups：</string>
+    <string name="scard_readers">获取智能卡Readers：</string>
+    <string name="scard_error">错误</string>
+    <string name="scard_complete">完成</string>
+    <string name="scard_valid">可用</string>
+    <string name="scard_invalid">不可用</string>
+    <string name="scard_connect">已连接</string>
+    <string name="scard_reconnect">重新连接</string>
+    <string name="scard_disconnect">断开连接</string>
+    <string name="scard_reason">出错信息：</string>
+    <string name="scard_refresh">刷新</string>
+    
+    <string name="gps_location_field">正在定位，请稍候</string>
+    <string name="gps_nmea_field">NMEA信息</string>
+    <string name="gps_available_satellites">搜索卫星数：</string>
+    <string name="gps_useful_satellites">定位卫星数：</string>
+    <string name="gps_longitude">经度</string>
+    <string name="gps_latitude">纬度</string>
+    
+    <string name="sensor_accel">加速器：</string>
+    <string name="sensor_magnetic">磁感器：</string>
+    
+    <string name="headset_info">耳机提示信息</string>
+    <string name="headset_prompt">切换到串口模式？</string>
+    
+    <string name="disconnect">通信端口不可用</string>
+    <string name="next">确认</string>
+    <string name="cancel">取消</string>
+    <string name="back">返回</string>
+    <string name="sending">发送数据：</string>
+    <string name="received">接收数据：</string>
+
+</resources>

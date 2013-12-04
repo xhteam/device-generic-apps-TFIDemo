@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /> 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     
     <uses-sdk
         android:minSdkVersion="17"
@@ -105,6 +107,21 @@
             android:screenOrientation="portrait"
             android:launchMode="singleTask" >
         </activity>
+        
+        <activity
+            android:name=".headset.HeadsetSettings"
+            android:label="@string/title_headset"
+            android:screenOrientation="sensor"
+            android:launchMode="singleTask" >
+        </activity>
+        
+        <service android:name=".headset.HeadsetObserver" />
+        
+        <receiver android:name=".headset.ObserverHelper" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

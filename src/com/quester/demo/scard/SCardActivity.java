@@ -8,7 +8,6 @@ import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.SystemProperties;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
@@ -268,7 +267,7 @@ public class SCardActivity extends Activity implements SCardPcscLite {
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activitiy_scard);
+		setContentView(R.layout.activity_scard);
 		mTextView = (TextView)findViewById(R.id.scard_info);
 		mButton = (ImageButton)findViewById(R.id.scard_refresh);
 		mButton.setOnClickListener(new OnClickListener() {

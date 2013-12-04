@@ -97,7 +97,19 @@
                 android:text="@string/title_tp"
                 android:clickable="true" />
         </LinearLayout>
-        <LinearLayout style="@style/RowStyle"/>
+        <LinearLayout style="@style/RowStyle">
+            <ImageButton android:id="@+id/goto_headset"
+                style="@style/ImageButtonStyle"
+                android:contentDescription="@string/title_headset"
+                android:background="@drawable/ic_headset" />
+            <TextView android:id="@+id/goto_headset_either"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dip"
+                android:textColor="#FFFFFF"
+                android:text="@string/title_headset"
+                android:clickable="true" />
+        </LinearLayout>
     </TableRow>
     
     
