@@ -1,6 +1,9 @@
 package com.quester.demo;
 
+import java.io.File;
+
 import com.quester.demo.barcode.BarcodeActivity;
+import com.quester.demo.barcode.NewBarcodeActivity;
 import com.quester.demo.gps.GpsActivity;
 import com.quester.demo.headset.HeadsetSettings;
 import com.quester.demo.infrared.InfraredActivity;
@@ -12,6 +15,7 @@ import com.quester.demo.tp.TouchpanelActivity;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
@@ -22,6 +26,8 @@ import android.widget.TextView;
  * @author John.Jian
  */
 public class MainActivity extends Activity implements OnClickListener {
+	
+	private static final String TAG = "barcode";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -69,12 +75,36 @@ public class MainActivity extends Activity implements OnClickListener {
 		dheadset.setOnClickListener(this);
 	}
 
+	private boolean checkVersion()
+	{
+		File file = new File(NewBarcodeActivity.BARCODE_PATH);
+		if (file.exists())
+		{
+			Log.i(TAG, "new barcode exist");
+			return true;
+		}
+		else
+		{
+			Log.i(TAG, "new barcode not exist");
+			return false;
+		}
+	}
+	
 	@Override
 	public void onClick(View v) {
 		int id = v.getId();
 		if (id == R.id.goto_barcode || id == R.id.goto_barcode_either) {
-			Intent mIntent = new Intent(MainActivity.this, BarcodeActivity.class);
-			startActivity(mIntent);
+			if (checkVersion())
+			{
+				Intent mIntent = new Intent(MainActivity.this, NewBarcodeActivity.class);
+				startActivity(mIntent);
+			}
+			else
+			{
+				Intent mIntent = new Intent(MainActivity.this, BarcodeActivity.class);
+				startActivity(mIntent);
+			}
+
 		} else if (id == R.id.goto_nfc || id == R.id.goto_nfc_either) {
 			Intent mIntent = new Intent(MainActivity.this, NfcActivity.class);
 			startActivity(mIntent);

@@ -1,5 +1,7 @@
 package com.quester.demo.barcode;
 
+import java.io.File;
+
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -95,6 +97,21 @@ public class BarcodeService extends Service {
 		startActivity(intent);
 	}
 	
+	private boolean checkVersion()
+	{
+		File file = new File(NewBarcodeActivity.BARCODE_PATH);
+		if (file.exists())
+		{
+			Log.i(TAG, "new barcode exist");
+			return true;
+		}
+		else
+		{
+			Log.i(TAG, "new barcode not exist");
+			return false;
+		}
+	}
+	
 	class KeyReceiver extends BroadcastReceiver {
 
 		@Override
@@ -110,10 +127,20 @@ public class BarcodeService extends Service {
 				}
 				
 				if (Math.abs(timeForKeycodeF1 - timeForKeycodeF2) < 500) {
-					Status.response = false;
-					Status.trigging = true;
-					sendIntent();
-					requestQR();
+					if (checkVersion())
+					{
+						Intent i = new Intent(Status.ACTION_NEW_TRIGGER);
+						i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+						startActivity(i);
+					}
+					else
+					{
+						Status.response = false;
+						Status.trigging = true;
+						sendIntent();
+						requestQR();
+					}
 				}
 			}
 		}

@@ -91,5 +91,12 @@
     <string name="back">Back</string>
     <string name="sending">Send data:</string>
     <string name="received">Rece data:</string>
-	<string name="t_notice">Press BACK to return to main menu</string>
+    <string name="barcode_decode_ver">Decode Version:</string>
+    <string name="barcode_framework_ver">Framework Version:</string>
+    <string name="barcode_soft_ver">Software Version:</string>
+    
+    <string name="error">Error</string>
+    <string name="confirm">Confirm</string>
+    <string name="barcode_init_failed">Init Failed!</string>
+    <string name="t_notice">Press BACK to return to main menu</string>
 </resources>

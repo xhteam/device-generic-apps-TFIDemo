@@ -81,5 +81,12 @@
     <string name="back">返回</string>
     <string name="sending">发送数据：</string>
     <string name="received">接收数据：</string>
+    <string name="barcode_decode_ver">解码器版本号：</string>
+    <string name="barcode_framework_ver">软件架构版本号：</string>
+    <string name="barcode_soft_ver">软件版本号：</string>
 
+    <string name="error">错误</string>
+    <string name="confirm">确定</string>
+    <string name="barcode_init_failed">初始化失败！</string>
+    <string name="t_notice">按BACK键返回主界面</string>
 </resources>
