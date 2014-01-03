@@ -91,5 +91,5 @@
     <string name="back">Back</string>
     <string name="sending">Send data:</string>
     <string name="received">Rece data:</string>
-
+	<string name="t_notice">Press BACK to return to main menu</string>
 </resources>
