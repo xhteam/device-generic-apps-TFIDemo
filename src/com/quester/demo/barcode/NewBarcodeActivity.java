@@ -3,6 +3,7 @@ package com.quester.demo.barcode;
 import com.quester.demo.R;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -45,6 +46,12 @@ public class NewBarcodeActivity extends Activity{
 	private Thread ioThread;
 	private CaptureRunnable mRunnable;
 	
+	//
+	private ProgressDialog mProgressDilaog = null;
+	
+	//
+	private String[] mHardwareInfo = null;
+	
 	private Handler mHandler = new Handler() 
 	{
 		public void handleMessage(Message msg) 
@@ -65,7 +72,27 @@ public class NewBarcodeActivity extends Activity{
 //					if (response == NewParser.VALID_COMMAND || response == NewParser.INVALID_COMMAND || response == NewParser.INVALID_VALUE)
 					if (reply.contains(validCmd) || reply.contains(invalidCmd) || reply.contains(invalidValue))
 					{
-						Log.i(TAG, "rsp cmd : " + new String(data));		
+//						Log.i(TAG, "rsp cmd : " + new String(data));
+						if (reply.contains("%%%VER" + new String(NewParser.VALID_COMMAND)))
+						{
+							String str = new String(reply);
+							
+							if (mHardwareInfo == null)
+							{
+								//default setting
+								mStatus = STATUS_HOST;
+								mComm.writeSerial(NewParser.getCommand(NewParser.TRIGGER_MODE_HOST));
+								button.setEnabled(true);	
+							}
+							
+							mHardwareInfo = getFirmwareVersion(new String(reply));
+							if (mProgressDilaog.isShowing())
+								mProgressDilaog.cancel();
+							showFirmVersion();
+							
+							Status.trigging = false;
+							setClickable(true);						
+						}
 					}
 					else	//barcode data
 					{
@@ -86,6 +113,15 @@ public class NewBarcodeActivity extends Activity{
 			case TIMEOUT:
 				Status.trigging = false;
 				setClickable(true);
+				
+				if (mHardwareInfo == null)
+				{
+					if (mProgressDilaog.isShowing())
+						mProgressDilaog.cancel();
+					createInitFailDialog();
+//					Toast.makeText(this, R.string.barcode_init_failed, Toast.LENGTH_LONG).show();
+					Log.e(TAG, "init barcode failed!");				
+				}
 				break;
 			default:
 				Log.e(TAG, "handler get error message");
@@ -93,6 +129,55 @@ public class NewBarcodeActivity extends Activity{
 			}
 		}
 	};
+	
+	private void showFirmVersion()
+	{
+		if (mHardwareInfo != null && mHardwareInfo.length >= 3)
+		{
+			txt_decode_ver.append(mHardwareInfo[0]);
+			txt_framework_ver.append(mHardwareInfo[1]);
+			txt_soft_ver.append(mHardwareInfo[2]);
+		}
+		else
+		{
+			Log.e(TAG, "error firm version message");
+		}
+	}
+	
+	private String[] getFirmwareVersion(String version)
+	{
+		String[] info = new String[3];
+		if (version == null || version.equals(""))
+		{
+			return null;
+		}
+		String[] array = version.split("\n");
+		if (array != null && array.length >= 3)
+		{
+			info[0] = array[0];
+			info[1] = array[1];
+			info[2] = array[2];
+		}
+		return info;
+	}
+	
+	private void createProgressDialog()
+	{
+		mProgressDilaog = new ProgressDialog(this);
+		mProgressDilaog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		mProgressDilaog.setMessage(getString(R.string.wait_for_data));
+//		mProgressDilaog.setTitle(title);
+//		mProgressDilaog.setIcon(icon);
+		mProgressDilaog.setIndeterminate(false);
+		mProgressDilaog.setCancelable(true);
+		mProgressDilaog.setButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				mProgressDilaog.cancel();				
+			}
+		});
+		mProgressDilaog.show();
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -114,36 +199,21 @@ public class NewBarcodeActivity extends Activity{
 		mRunnable = new CaptureRunnable();
 		
 		initViews();
-		if (initBarcode())
-		{
-			initValues();
-			
-		}
+		initBarcode();
 	}
 	
-	private void initValues()
-	{
-		mStatus = STATUS_HOST;
-		mGroup.check(R.id.barcode_trigger);
-	}
 	
-	private boolean initBarcode()
+	private void initBarcode()
 	{	
-		String[] info = mComm.isConnected();
-		if (info != null)
-		{
-			txt_decode_ver.append(info[0]);
-			txt_framework_ver.append(info[1]);
-			txt_soft_ver.append(info[2]);
-		}
+		if (mProgressDilaog == null)
+			createProgressDialog();
 		else
-		{
-			createInitFailDialog();
-//			Toast.makeText(this, R.string.barcode_init_failed, Toast.LENGTH_LONG).show();
-			Log.e(TAG, "init barcode failed!");
-			return false;
-		}
-		return true;
+			mProgressDilaog.show();
+		
+		mComm.writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
+		Status.trigging = true;
+		startScan();
+		setClickable(false);
 	}
 	
 	private void createInitFailDialog()
@@ -173,6 +243,8 @@ public class NewBarcodeActivity extends Activity{
 		mGroup = (RadioGroup)findViewById(R.id.barcode_scanner);
 		mTriggerRb = (RadioButton)findViewById(R.id.barcode_trigger);
 		mContinueRb = (RadioButton)findViewById(R.id.barcode_continue);
+		
+		mGroup.check(R.id.barcode_trigger);
 		
 		mGroup.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -249,14 +321,9 @@ public class NewBarcodeActivity extends Activity{
 	protected void onPause() {
 		super.onPause();
 		
-		try {
-			stopCapture();	
-			ioThread.join();
+		stopCapture();	
+		if (mComm != null)
 			mComm.closeSerial();
-			
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	@Override
@@ -282,7 +349,8 @@ public class NewBarcodeActivity extends Activity{
 	
 	private void stopCapture() {
 		mRunnable.setConnectState(false);
-		mComm.writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
+//		mComm.writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
+		ioThread.interrupt();
 	}
 	
 	private class CaptureRunnable implements Runnable {

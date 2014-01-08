@@ -154,43 +154,43 @@ public class NewSerialComm {
 		}
 	}
 	
-	/* Device connection status */
-	public String[] isConnected() {
-		String[] info = null;
-		if (mSerialPort != null) {
-			writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
-			byte[] reply = readSerial();
-			int len = NewParser.FIRMWAER_VERSION_LIST.length();
-			if (reply != null && reply.length > len)
-			{
-				String str = new String(reply);
-				str = str.substring(reply.length - len);
-				Log.i(TAG, "reply : " + str);	//wangxi
-				if (str.equals("%%%VER" + new String(NewParser.VALID_COMMAND)))
-				{
-					info = getFirmwareVersion(new String(reply));
-				}
-			}
-		}
-		return info;
-	}
-	
-	private String[] getFirmwareVersion(String version)
-	{
-		String[] info = new String[3];
-		if (version == null || version.equals(""))
-		{
-			return null;
-		}
-		String[] array = version.split("\n");
-		if (array != null && array.length >= 3)
-		{
-			info[0] = array[0];
-			info[1] = array[1];
-			info[2] = array[2];
-		}
-		return info;
-	}
+//	/* Device connection status */
+//	public String[] isConnected() {
+//		String[] info = null;
+//		if (mSerialPort != null) {
+//			writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
+//			byte[] reply = readSerial();
+//			int len = NewParser.FIRMWAER_VERSION_LIST.length();
+//			if (reply != null && reply.length > len)
+//			{
+//				String str = new String(reply);
+//				str = str.substring(reply.length - len);
+//				Log.i(TAG, "reply : " + str);	//wangxi
+//				if (str.equals("%%%VER" + new String(NewParser.VALID_COMMAND)))
+//				{
+//					info = getFirmwareVersion(new String(reply));
+//				}
+//			}
+//		}
+//		return info;
+//	}
+//	
+//	private String[] getFirmwareVersion(String version)
+//	{
+//		String[] info = new String[3];
+//		if (version == null || version.equals(""))
+//		{
+//			return null;
+//		}
+//		String[] array = version.split("\n");
+//		if (array != null && array.length >= 3)
+//		{
+//			info[0] = array[0];
+//			info[1] = array[1];
+//			info[2] = array[2];
+//		}
+//		return info;
+//	}
 	
 	/* Reads serial port */
 	public byte[] readSerial() {
@@ -233,8 +233,10 @@ public class NewSerialComm {
 			catch (InterruptedException e) {
 				Log.e(TAG, "readSerial, " + e.getMessage());
 			}
+			
 			Log.i(TAG, "length : " + length);	//wangxi
-			Log.i(TAG, "data : " + new String(data));	//wangxi
+			if (data != null)
+				Log.i(TAG, "data : " + new String(data));	//wangxi
 		}
 		return data;
 	}

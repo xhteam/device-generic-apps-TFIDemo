@@ -87,6 +87,7 @@
 
     <string name="error">错误</string>
     <string name="confirm">确定</string>
-    <string name="barcode_init_failed">初始化失败！</string>
+    <string name="barcode_init_failed">初始化失败！\n请确认条形码引擎是否安装。</string>
+    <string name="wait_for_data">初始化中...</string>
     <string name="t_notice">按BACK键返回主界面</string>
 </resources>
