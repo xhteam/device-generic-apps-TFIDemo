@@ -108,9 +108,7 @@ public class NfcActivity extends Activity implements CreateNdefMessageCallback {
 			
 			mNfcAdapter.setNdefPushMessageCallback(this, this);
 			if (!mNfcAdapter.isEnabled()) {
-				if(!mNfcAdapter.enable()) {
-					mTextView.setText("Could not enable nfc within airplane mode?");
-				}
+				mTextView.setText("nfc is disable");
 			}
 		}
 	}
@@ -180,7 +178,7 @@ public class NfcActivity extends Activity implements CreateNdefMessageCallback {
 	protected void onPause() {
 		super.onPause();
 		mPause = true;
-		if (mNfcAdapter != null && mNfcAdapter.enable()) {
+		if (mNfcAdapter != null && mNfcAdapter.isEnabled()) {
 			mNfcAdapter.disableForegroundDispatch(this);
 		}
 	}
