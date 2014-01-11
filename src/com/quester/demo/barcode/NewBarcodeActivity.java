@@ -185,15 +185,6 @@ public class NewBarcodeActivity extends Activity{
 
 		setContentView(R.layout.activity_new_barcode);		
 		mComm = new NewSerialComm(this);
-		if (mComm.ifPowerOn())
-		{
-			Log.i(TAG, "barcode power is on");
-		}
-		else
-		{
-			Log.i(TAG, "barcode power is off");
-			mComm.turnOnPower();
-		}
 		
 		mComm.openSerial();
 		mRunnable = new CaptureRunnable();
@@ -210,7 +201,6 @@ public class NewBarcodeActivity extends Activity{
 		else
 			mProgressDilaog.show();
 		
-		mComm.writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
 		Status.trigging = true;
 		startScan();
 		setClickable(false);
@@ -377,6 +367,18 @@ public class NewBarcodeActivity extends Activity{
 
 		@Override
 		public void run() {
+		
+			if (mComm.ifPowerOn())
+			{
+				Log.i(TAG, "barcode power is on");
+			}
+			else
+			{
+				Log.i(TAG, "barcode power is off");
+				mComm.turnOnPower();
+			}
+			mComm.writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
+
 			readSerialPort();
 		}		
 	}

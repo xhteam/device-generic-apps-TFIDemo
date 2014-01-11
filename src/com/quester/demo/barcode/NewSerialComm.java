@@ -41,13 +41,17 @@ public class NewSerialComm {
 			osw.flush();
 			osw.close();
 			os.close();
+			Thread.sleep(2000);
 			
 			return true;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-		} 
+		}
+		catch (InterruptedException e){
+			e.printStackTrace();
+		}
 		return false;
 	}
 		
@@ -88,7 +92,7 @@ public class NewSerialComm {
 				int j;
 				for(j = 0 ; j<result.length ; j++)
 				{
-					if (result[j].contains("state["))
+					if (result[j].contains("power["))
 					{
 						tmp = result[j];
 						Log.i(TAG, "line : " + j + " : " + tmp);	//wangxi
@@ -102,14 +106,13 @@ public class NewSerialComm {
 				}
 				
 				result = tmp.split("\\[");
-				tmp = result[result.length - 1];
-				
-				tmp = tmp.substring(0, tmp.length() - 2);
+				tmp = result[1];
+				tmp = tmp.substring(0, 3);
 				if (tmp.equals("low"))
 				{
 					return true;
 				}
-				else if (tmp.equals("high"))
+				else if (tmp.equals("hig"))
 				{
 					return false;
 				}
