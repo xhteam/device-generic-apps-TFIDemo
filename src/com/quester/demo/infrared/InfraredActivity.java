@@ -1,6 +1,7 @@
 package com.quester.demo.infrared;
 
 import java.io.UnsupportedEncodingException;
+import com.quester.android.platform_library.infrared.*;
 
 import com.quester.demo.R;
 

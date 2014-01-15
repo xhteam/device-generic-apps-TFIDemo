@@ -8,14 +8,11 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_PACKAGE_NAME := TFIDemo
 LOCAL_CERTIFICATE := platform
 
-LOCAL_JNI_SHARED_LIBRARIES := libscard_jni
 LOCAL_JAVA_LIBRARIES := com.quester.android.platform_library
 #LOCAL_STATIC_JAVA_LIBRARIES := com.android.vcard
 
-LOCAL_REQUIRED_MODULES := libscard_jni
 
 #LOCAL_PROGUARD_ENABLED := disabled
-LOCAL_PROGUARD_FLAG_FILES := proguard.flags
 
 include $(BUILD_PACKAGE)
 

@@ -1,6 +1,8 @@
 package com.quester.demo.scard;
 
 import com.quester.android.platform_library.PcscdManager;
+import com.quester.android.platform_library.scard.*;
+
 import com.quester.demo.R;
 
 import android.app.Activity;

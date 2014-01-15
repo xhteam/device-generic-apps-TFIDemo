@@ -1,4 +1,5 @@
 package com.quester.demo.barcode;
+import com.quester.android.platform_library.barcode.*;
 
 import com.quester.demo.R;
 import android.app.Activity;
