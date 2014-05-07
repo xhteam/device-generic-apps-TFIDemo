@@ -7,7 +7,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 
 /**
@@ -23,7 +25,7 @@ public class BarcodeService extends Service {
 	 * Trigger: 0 at least 10ms to trig scan, 1 as normal
 	 */
 	
-	private final String TAG = this.getClass().getName();
+	private final String TAG = "BarcodeService";
 	private final String ACTION_F1 = "action.KEYCODE_F1";
 	private final String ACTION_F2 = "action.KEYCODE_F2";
 	private long timeForKeycodeF1 = 0;
@@ -116,23 +118,69 @@ public class BarcodeService extends Service {
 
 		@Override
 		public void onReceive(Context cotext, Intent intent) {
-			if (!Status.trigging) {
+			Log.d(TAG, "get key broadcast");	//wangxi
+			
+			if (!Status.trigging && Status.BUTTON_TRIGGER) 
+			{				
 				String action = intent.getAction();
-				if (action.equals(ACTION_F1)) {
+				if (action.equals(ACTION_F1)) 
+				{
 					timeForKeycodeF1 = System.currentTimeMillis();
-				} else if (action.equals(ACTION_F2)) {
+				} 
+				else if (action.equals(ACTION_F2)) 
+				{
 					timeForKeycodeF2 = System.currentTimeMillis();
-				} else {
+				} 
+				else 
+				{
 					//
 				}
 				
-				if (Math.abs(timeForKeycodeF1 - timeForKeycodeF2) < 500) {
-					if (checkVersion())
+				if (Math.abs(timeForKeycodeF1 - timeForKeycodeF2) < 500) 
+				{
+					Status.BUTTON_TRIGGER = false;
+					if (checkVersion())	
 					{
-						Intent i = new Intent(Status.ACTION_NEW_TRIGGER);
-						i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-						i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-						startActivity(i);
+						Log.i(TAG, "new barcode");	//wangxi
+						//new barcode						
+						if (Status.BARCODE_ACTIVITY == Status.ACTIVITY_ON)
+						{
+							Log.d(TAG, "send broadcast");	//wangxi
+							Intent i = new Intent(Status.ACTION_NEW_TRIGGER_BROADCAST);
+							sendBroadcast(i);
+						}
+//						else if (Status.BARCODE_ACTIVITY == Status.ACTIVITY_PAUSE)
+//						{
+//							Log.d(TAG, "wait 1s and start activity");	//wangxi
+//							
+//							try {
+//								Thread.sleep(1200);
+//							} catch (InterruptedException e) {
+//								e.printStackTrace();
+//							}
+//							
+//							Intent i = new Intent(Status.ACTION_NEW_TRIGGER);
+//							i.putExtra(Status.EXTRA_TRIGGER_ONCE, true);
+//							i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//							i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+//							i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//							startActivity(i);
+//							Log.i(TAG, "send activity success");	//wangxi
+//						}
+						else if (Status.BARCODE_ACTIVITY == Status.ACTIVITY_OFF)
+						{
+							Log.d(TAG, "start activity");	//wangxi
+							Intent i = new Intent(Status.ACTION_NEW_TRIGGER);
+							i.putExtra(Status.EXTRA_TRIGGER_ONCE, true);
+							i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+							i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+							i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+							startActivity(i);
+						}
+						else
+						{
+							Log.e(TAG, "get error status.");
+						}						
 					}
 					else
 					{
@@ -141,10 +189,31 @@ public class BarcodeService extends Service {
 						sendIntent();
 						requestQR();
 					}
+					
+					Message msg = mHandler.obtainMessage();
+					msg.what = 1;
+					mHandler.sendMessage(msg);
 				}
 			}
 		}
 		
-	} 
+	}
+	
+	private static Handler mHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) 
+			{
+			case 1: 
+				try {
+					Thread.sleep(300);
+					Status.BUTTON_TRIGGER = true;
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				break;
+			}
+		}
+	};
 	
 }

@@ -3,7 +3,9 @@ package com.quester.demo;
 import java.io.File;
 
 import com.quester.demo.barcode.BarcodeActivity;
+import com.quester.demo.barcode.BarcodeService;
 import com.quester.demo.barcode.NewBarcodeActivity;
+import com.quester.demo.barcode.Status;
 import com.quester.demo.gps.GpsActivity;
 import com.quester.demo.headset.HeadsetSettings;
 import com.quester.demo.infrared.InfraredActivity;
@@ -33,6 +35,10 @@ public class MainActivity extends Activity implements OnClickListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		//wangxi
+		Intent startService = new Intent(this, BarcodeService.class);
+		startService(startService);
 		
 		ImageButton barcode = (ImageButton)findViewById(R.id.goto_barcode);
 		barcode.setOnClickListener(this);
@@ -96,8 +102,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		if (id == R.id.goto_barcode || id == R.id.goto_barcode_either) {
 			if (checkVersion())
 			{
-				Intent mIntent = new Intent(MainActivity.this, NewBarcodeActivity.class);
-				startActivity(mIntent);
+				Intent i = new Intent(Status.ACTION_NEW_TRIGGER_START);
+				startActivity(i);
 			}
 			else
 			{

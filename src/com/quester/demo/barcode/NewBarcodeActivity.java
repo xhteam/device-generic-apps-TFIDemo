@@ -5,8 +5,11 @@ import com.quester.demo.R;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -53,6 +56,15 @@ public class NewBarcodeActivity extends Activity{
 	//
 	private String[] mHardwareInfo = null;
 	
+	//
+	private boolean mIsTrigger = false;
+	
+	//
+	private static boolean isCaptureThreadRunning = false;
+	
+	//
+	private boolean firstStart = false;
+	
 	private Handler mHandler = new Handler() 
 	{
 		public void handleMessage(Message msg) 
@@ -91,8 +103,23 @@ public class NewBarcodeActivity extends Activity{
 								mProgressDilaog.cancel();
 							showFirmVersion();
 							
+							//check if is trigger model
+//							if (mIsTrigger)
+//							{							
+//								trigBarcode();
+//								
+//								mIsTrigger = false;
+//							}
+							
 							Status.trigging = false;
-							setClickable(true);						
+							setClickable(true);	
+							
+							if (firstStart && mIsTrigger)
+							{
+								Log.i(TAG, "first trigger");
+								trigBarcode();
+								firstStart = false;
+							}
 						}
 					}
 					else	//barcode data
@@ -135,9 +162,17 @@ public class NewBarcodeActivity extends Activity{
 	{
 		if (mHardwareInfo != null && mHardwareInfo.length >= 3)
 		{
-			txt_decode_ver.append(mHardwareInfo[0]);
-			txt_framework_ver.append(mHardwareInfo[1]);
-			txt_soft_ver.append(mHardwareInfo[2]);
+//			txt_decode_ver.append(mHardwareInfo[0]);
+//			txt_framework_ver.append(mHardwareInfo[1]);
+//			txt_soft_ver.append(mHardwareInfo[2]);
+			if (mHardwareInfo[0] != null)
+				txt_decode_ver.setText(getString(R.string.barcode_decode_ver) + mHardwareInfo[0]);
+			
+			if (mHardwareInfo[1] != null)
+				txt_framework_ver.setText(getString(R.string.barcode_framework_ver) + mHardwareInfo[1]);
+			
+			if (mHardwareInfo[2] != null)
+				txt_soft_ver.setText(getString(R.string.barcode_soft_ver) + mHardwareInfo[2]);			
 		}
 		else
 		{
@@ -159,6 +194,12 @@ public class NewBarcodeActivity extends Activity{
 			info[1] = array[1];
 			info[2] = array[2];
 		}
+		Log.d(TAG, "version : " + version);	//wangxi
+		for (int i = 0; i < 3 ; i++)
+		{
+			Log.d(TAG, "array " + i + " : " + array[i] + " ,info " + i + " : " + info[i]);
+		}
+		
 		return info;
 	}
 	
@@ -184,19 +225,29 @@ public class NewBarcodeActivity extends Activity{
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.activity_new_barcode);		
-		mComm = new NewSerialComm(this);
+		setContentView(R.layout.activity_new_barcode);	
+		Log.i(TAG, "onCreate");	//wangxi
 		
-		mComm.openSerial();
-		mRunnable = new CaptureRunnable();
+//		Intent startService = new Intent(this, BarcodeService.class);
+//		startService(startService);
+		
+//		mComm = new NewSerialComm(this);
+//		
+//		mComm.openSerial();
+//		mRunnable = new CaptureRunnable();
 		
 		initViews();
-		initBarcode();
+//		initBarcode();
 	}
 	
 	
 	private void initBarcode()
 	{	
+		mComm = new NewSerialComm(this);
+		
+		mComm.openSerial();
+		mRunnable = new CaptureRunnable();
+		
 		if (mProgressDilaog == null)
 			createProgressDialog();
 		else
@@ -205,6 +256,8 @@ public class NewBarcodeActivity extends Activity{
 		Status.trigging = true;
 		startScan();
 		setClickable(false);
+			
+		startCapture();
 	}
 	
 	private void createInitFailDialog()
@@ -265,7 +318,13 @@ public class NewBarcodeActivity extends Activity{
 	private void trigBarcode()
 	{
 		Status.trigging = true;
-		mComm.writeSerial(NewParser.START_DECODE);
+		if (mComm != null)
+			mComm.writeSerial(NewParser.START_DECODE);
+		else
+		{
+			Log.e(TAG, "serial comm is null");
+			return;
+		}
 		startScan();
 		setClickable(false);
 	}
@@ -291,37 +350,119 @@ public class NewBarcodeActivity extends Activity{
 	
 	@Override
 	protected void onResume() {
+		Log.i(TAG, "on resume");	//wangxi
+		
 		super.onResume();
-		if (mComm != null)
-			mComm.openSerial();
-		startCapture();
+		
+		//turn status on
+		Status.BARCODE_ACTIVITY = Status.ACTIVITY_ON;
+		
+		initBarcode();
+		
+		firstStart = true;
+		
+		IntentFilter filter = new IntentFilter();
+        filter.addAction(Status.ACTION_NEW_TRIGGER_BROADCAST);
+    	registerReceiver(receiver, filter);
+    	    	
 		Intent i = getIntent();
-		if (Status.ACTION_NEW_TRIGGER.equals(i.getAction()))
+		String action = i.getAction();
+		
+		if (action != null)
+			Log.w(TAG, "get action : " + action);
+		else
+			Log.e(TAG, "action is null");
+		
+		if (Status.ACTION_NEW_TRIGGER.equals(action) || null == action)
 		{
-			if (mStatus == STATUS_CONTINUE)
+			Log.i(TAG, "trigger");	//wangxi
+			
+			if (action == null)
 			{
-				mComm.writeSerial(NewParser.getCommand(NewParser.TRIGGER_MODE_HOST));
-				button.setEnabled(true);
-				mStatus = STATUS_HOST;
+				mIsTrigger = true;
 			}
-			trigBarcode();
+			else
+			{
+				mIsTrigger = i.getBooleanExtra(Status.EXTRA_TRIGGER_ONCE, false);
+			}
+			
+			if (mHardwareInfo == null)
+			{
+				//activity need init
+				mIsTrigger = true;
+			}
+			else
+			{
+				if (mStatus == STATUS_CONTINUE)
+				{
+					mComm.writeSerial(NewParser.getCommand(NewParser.TRIGGER_MODE_HOST));
+					button.setEnabled(true);
+					mStatus = STATUS_HOST;
+				}
+				
+				trigBarcode();
+			}
+			
+			i.setAction(Status.ACTION_NEW_TRIGGER_START);
+			Log.d(TAG, "set action to normarl start");
 		}
+		else
+		{
+			mIsTrigger = false;
+		}
+		
+		
 	}
 	
 	@Override
 	protected void onPause() {
 		super.onPause();
+				
+		Log.d(TAG, "on pause");
+		
+		unregisterReceiver(receiver);	
 		
 		stopCapture();	
 		if (mComm != null)
+		{			
 			mComm.closeSerial();
+//			try {
+//				Log.d(TAG, "sleep 1s");	//wangxi
+//				Thread.sleep(1000);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+		}
+		
+		mComm = null;
+		mRunnable = null;
+		
+		//turn status off
+		Status.BARCODE_ACTIVITY = Status.ACTIVITY_OFF;
 	}
 	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		mComm = null;
-		mRunnable = null;
+		Log.d(TAG, "on destory");
+		
+//		stopCapture();	
+//		if (mComm != null)
+//		{			
+//			mComm.closeSerial();
+//			try {
+//				Log.d(TAG, "sleep 1s");	//wangxi
+//				Thread.sleep(1000);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			Status.BARCODE_ACTIVITY = Status.ACTIVITY_OFF;
+//		}
+//		
+//		mComm = null;
+//		mRunnable = null;
 	}
 	
 	private void setClickable(boolean clickable) 
@@ -340,25 +481,37 @@ public class NewBarcodeActivity extends Activity{
 	
 	private void stopCapture() {
 		mRunnable.setConnectState(false);
+		isCaptureThreadRunning = false;
 //		mComm.writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
-		ioThread.interrupt();
+//		ioThread.interrupt();
+		mComm.writeSerial(NewParser.getCommand(NewParser.TRIGGER_MODE_HOST));
+		
+		try {
+			ioThread.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private class CaptureRunnable implements Runnable {
 		
 		private boolean isConnected;
-		
+				
 		public void setConnectState(boolean connect) {
 			isConnected = connect;
 		}
 		
 		private void readSerialPort() {
 			byte[] recvBuf = null;
-			while (isConnected) {
+			while (isCaptureThreadRunning) {//isConnected) {
 				if (mComm != null)
 					recvBuf = mComm.readSerial();
-				else
+				else	
+				{
+					isCaptureThreadRunning = false;
 					break;
+				}
 				
 				if (recvBuf != null) {
 					mHandler.sendMessage(mHandler.obtainMessage(RECEIVE, recvBuf));
@@ -368,7 +521,9 @@ public class NewBarcodeActivity extends Activity{
 
 		@Override
 		public void run() {
-		
+			
+			isCaptureThreadRunning = true;
+			
 			if (mComm.ifPowerOn())
 			{
 				Log.i(TAG, "barcode power is on");
@@ -383,4 +538,18 @@ public class NewBarcodeActivity extends Activity{
 			readSerialPort();
 		}		
 	}
+		
+	private BroadcastReceiver receiver = new BroadcastReceiver()
+	{
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			if (Status.ACTION_NEW_TRIGGER_BROADCAST.equals(action))
+			{
+				//f1 + f2 buttons 
+				Log.i(TAG, "get broadcast");	//wangxi
+				trigBarcode();
+			}			
+		}		
+	};
 }
