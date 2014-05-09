@@ -463,6 +463,7 @@ public class NewBarcodeActivity extends Activity{
 //		
 //		mComm = null;
 //		mRunnable = null;
+		Status.trigging = false;
 	}
 	
 	private void setClickable(boolean clickable) 
