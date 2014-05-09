@@ -33,7 +33,11 @@
     <string name="barcode_capture">Scan barcode</string>
     
     <string name="nfc_info_field">NFC Infos</string>
-    
+    <string name="nfc_ndef_msg">Android NFC data exchange format\n\n</string>
+    <string name="nfc_tech_msg">Standard NFC tag technology\n\n</string>
+    <string name="nfc_tag_msg">Unknown NFC tag technology\n\n</string>
+    <string name="nfc_stby_msg">No NFC card found</string>
+
     <string name="infrared_send_field">Send message</string>
     <string name="infrared_recv_field">Recv message</string>
     <string name="infrared_send_prompt">To sending message</string>

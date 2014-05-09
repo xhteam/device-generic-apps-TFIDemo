@@ -143,15 +143,15 @@ public class NfcActivity extends Activity implements CreateNdefMessageCallback {
 	private void handleIntent(Intent intent) {
 		String action = intent.getAction();
 		if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
-			mTextView.setText("\"Android NFC data exchange format\"\n\n");
+			mTextView.setText(R.string.nfc_ndef_msg);
 			mTextView.append(processIntentNdef(intent));
 		} else if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
-			mTextView.setText("\"Standard NFC tag technology\"\n\n");
+			mTextView.setText(R.string.nfc_tech_msg);
 			processIntentTech(intent);
 		} else if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
-			mTextView.setText("\"Unknown NFC tag technology\"\n\n");
+			mTextView.setText(R.string.nfc_tag_msg);
 		} else {
-			mTextView.setText("Standby..");
+			mTextView.setText(R.string.nfc_stby_msg);
 		}
 	}
 	

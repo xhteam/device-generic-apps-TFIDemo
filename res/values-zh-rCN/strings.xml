@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <string name="app_name">产品演示</string>
     <string name="action_settings">设置</string>
 	<string name="settings_success">成功</string>
 	<string name="settings_fail">失败</string>
@@ -31,6 +31,10 @@
     <string name="barcode_capture">扫描条形码</string>
     
     <string name="nfc_info_field">NFC信息</string>
+    <string name="nfc_ndef_msg">Android数据交换格式\n\n</string>
+    <string name="nfc_tech_msg">标准电子标签\n\n</string>
+    <string name="nfc_tag_msg">无法识别的标签\n\n</string>
+    <string name="nfc_stby_msg">没有检测到NFC卡</string>
     
     <string name="infrared_send_field">发送信息</string>
     <string name="infrared_recv_field">接收信息</string>
