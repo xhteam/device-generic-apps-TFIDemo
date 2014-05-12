@@ -350,9 +350,9 @@ public class NewBarcodeActivity extends Activity{
 	
 	@Override
 	protected void onResume() {
+		super.onResume();
 		Log.i(TAG, "on resume");	//wangxi
 		
-		super.onResume();
 		
 		//turn status on
 		Status.BARCODE_ACTIVITY = Status.ACTIVITY_ON;
@@ -417,11 +417,8 @@ public class NewBarcodeActivity extends Activity{
 	@Override
 	protected void onPause() {
 		super.onPause();
-				
 		Log.d(TAG, "on pause");
-		
-		unregisterReceiver(receiver);	
-		
+		unregisterReceiver(receiver);
 		stopCapture();	
 		if (mComm != null)
 		{			
@@ -482,16 +479,23 @@ public class NewBarcodeActivity extends Activity{
 	
 	private void stopCapture() {
 		mRunnable.setConnectState(false);
-		isCaptureThreadRunning = false;
+//		isCaptureThreadRunning = false;
 //		mComm.writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
 //		ioThread.interrupt();
 		mComm.writeSerial(NewParser.getCommand(NewParser.TRIGGER_MODE_HOST));
 		
-		try {
-			ioThread.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(ioThread!=null){
+			int waitcount=20;
+			ioThread.interrupt();
+			while((isCaptureThreadRunning!=false)&&waitcount>0){
+				waitcount--;
+				try {
+					Thread.sleep(5);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			ioThread=null;
 		}
 	}
 	
@@ -505,15 +509,11 @@ public class NewBarcodeActivity extends Activity{
 		
 		private void readSerialPort() {
 			byte[] recvBuf = null;
-			while (isCaptureThreadRunning) {//isConnected) {
-				if (mComm != null)
-					recvBuf = mComm.readSerial();
-				else	
-				{
-					isCaptureThreadRunning = false;
+			while (isCaptureThreadRunning&&!Thread.interrupted()) {//isConnected) {
+				if (mComm != null){
+					recvBuf = mComm.readSerial();//this is block operation
+				}else
 					break;
-				}
-				
 				if (recvBuf != null) {
 					mHandler.sendMessage(mHandler.obtainMessage(RECEIVE, recvBuf));
 				}
@@ -537,6 +537,7 @@ public class NewBarcodeActivity extends Activity{
 			mComm.writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
 
 			readSerialPort();
+			isCaptureThreadRunning = false;
 		}		
 	}
 		
