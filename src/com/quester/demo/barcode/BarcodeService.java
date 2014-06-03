@@ -118,7 +118,7 @@ public class BarcodeService extends Service {
 
 		@Override
 		public void onReceive(Context cotext, Intent intent) {
-			Log.d(TAG, "get key broadcast");	//wangxi
+			Log.d(TAG, "get key broadcast triggering="+Status.trigging+",BUTTON_TRIGGER="+Status.BUTTON_TRIGGER);	//wangxi
 			
 			if (!Status.trigging && Status.BUTTON_TRIGGER) 
 			{				

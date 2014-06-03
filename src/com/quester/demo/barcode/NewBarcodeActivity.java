@@ -485,7 +485,7 @@ public class NewBarcodeActivity extends Activity{
 		mComm.writeSerial(NewParser.getCommand(NewParser.TRIGGER_MODE_HOST));
 		
 		if(ioThread!=null){
-			int waitcount=20;
+			int waitcount=200;
 			ioThread.interrupt();
 			while((isCaptureThreadRunning!=false)&&waitcount>0){
 				waitcount--;
