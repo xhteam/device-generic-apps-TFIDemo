@@ -483,9 +483,15 @@ public class NewBarcodeActivity extends Activity{
 //		mComm.writeSerial(NewParser.getCommand(NewParser.FIRMWAER_VERSION_LIST.getBytes()));
 //		ioThread.interrupt();
 		mComm.writeSerial(NewParser.getCommand(NewParser.TRIGGER_MODE_HOST));
+		/*
+		try {
+			ioThread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}*/
 		
 		if(ioThread!=null){
-			int waitcount=200;
+			int waitcount=20;
 			ioThread.interrupt();
 			while((isCaptureThreadRunning!=false)&&waitcount>0){
 				waitcount--;
