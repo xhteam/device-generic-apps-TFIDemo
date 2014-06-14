@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dip"
             android:orientation="vertical" >
-            <TextView
+            <TextView android:id="@+id/barcode_attr"
 	            style="@style/TextViewStyle"
 	            android:layout_marginBottom="5dip"
 	            android:textSize="17sp"

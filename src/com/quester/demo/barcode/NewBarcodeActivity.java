@@ -25,6 +25,7 @@ public class NewBarcodeActivity extends Activity{
 
 	private static final String TAG = "NewBarcodeActivity";
 	public static final String BARCODE_PATH = "/proc/driver/barcode";
+	private TextView txt_attr;
 	private TextView txt_info;
 	private TextView txt_decode_ver;
 	private TextView txt_framework_ver;
@@ -101,7 +102,7 @@ public class NewBarcodeActivity extends Activity{
 							mHardwareInfo = getFirmwareVersion(new String(reply));
 							if (mProgressDilaog.isShowing())
 								mProgressDilaog.cancel();
-							showFirmVersion();
+							//showFirmVersion();
 							
 							//check if is trigger model
 //							if (mIsTrigger)
@@ -280,10 +281,16 @@ public class NewBarcodeActivity extends Activity{
 	private void initViews()
 	{
 		txt_info = (TextView) findViewById(R.id.barcode_info);
+		txt_attr =(TextView) findViewById(R.id.barcode_attr); 
 		txt_decode_ver = (TextView) findViewById(R.id.txt_decode_ver);
 		txt_framework_ver = (TextView) findViewById(R.id.txt_framework_ver);
 		txt_soft_ver = (TextView) findViewById(R.id.txt_soft_ver);
-		
+
+		txt_attr.setText("");		
+		txt_decode_ver.setText("");
+		txt_framework_ver.setText("");
+		txt_soft_ver.setText("");
+			
 		mGroup = (RadioGroup)findViewById(R.id.barcode_scanner);
 		mTriggerRb = (RadioButton)findViewById(R.id.barcode_trigger);
 		mContinueRb = (RadioButton)findViewById(R.id.barcode_continue);
